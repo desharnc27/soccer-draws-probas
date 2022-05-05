@@ -4,7 +4,7 @@ Number of pots,4
 Number of groups,6
 Number of mono-continents,6
 Hybrid continents
-Number of hosts,1
+Number of hosts,2
 
 //Minima and maxima gives inclusive bounds for each mono-continent, regarding its presence in each group.
 

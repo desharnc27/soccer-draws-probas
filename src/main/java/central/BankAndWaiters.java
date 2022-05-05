@@ -11,8 +11,8 @@ package central;
  */
 public class BankAndWaiters {
 
-    static NodeList[] bank = new NodeList[33];
-    static NodeList[] waiters = new NodeList[33];
+    public static NodeList[] bank = new NodeList[33];
+    public static NodeList[] waiters = new NodeList[33];
 
     static void intitializeLists() {
         for (int i = 0; i <= 32; i++) {

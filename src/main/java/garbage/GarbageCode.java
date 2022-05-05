@@ -5,16 +5,6 @@
  */
 package garbage;
 
-import central.AscendStorer;
-import central.ByteArray;
-import central.DebugData;
-import central.Misc;
-import central.StateComparator;
-import central.Statix;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-
 /**
  *
  * @author desharnc27
@@ -310,6 +300,183 @@ public class GarbageCode {
         }
 
         return false;
+    }
+    //from Old main
+    
+    public static void main0() {
+        BankAndWaiters.intitializeLists();
+        Node root = new Node();
+        root.expand();
+        //Qatar auto number one
+        for (int i = 0; i < BankAndWaiters.bank[1].list.size(); i++) {
+            Node n = BankAndWaiters.bank[1].list.get(i);
+            if (n.potsState[0][0] == 4) {
+                //nothing to doIfLong
+                //n.probability =1.0;
+            } else {
+                BankAndWaiters.bank[1].list.remove(i);
+                i--;
+            }
+        }
+        StateComparator scmp = new StateComparator();
+        System.out.println("NbNodes one level " + (1) + ": " + BankAndWaiters.bank[1].list.size());
+        long tStart = System.currentTimeMillis();
+        for (int i = 1; i < 32; i++) {
+
+            long probCount = 0;
+
+            int limit = BankAndWaiters.bank[i].list.size();
+            if (i == 24) {
+                limit /= 1000;
+            }
+            for (int j = 0; j < limit; j++) {
+                Node node = BankAndWaiters.bank[i].list.get(j);
+
+                //node.printPotsState();
+                //nodeDebug(node);
+                //nodeAscending(node);
+                //nodeDebugTot(node);
+                probCount += node.totNbPoss;
+                node.expand();
+                //if (i==9 || i==8)
+                //    node.printPotsState();
+            }
+            System.out.println("NbNodes one level " + (i + 1) + ": " + BankAndWaiters.bank[i + 1].list.size());
+            System.out.println("Sum of Probability: " + probability(i, probCount));
+
+            BankAndWaiters.bank[i + 1].list.sort(scmp);
+            for (int j = 0; j < BankAndWaiters.waiters[i + 1].list.size(); j++) {
+                Node wn = BankAndWaiters.waiters[i + 1].list.get(j);
+                int idx = Collections.binarySearch(BankAndWaiters.bank[i + 1].list, wn, scmp);
+                if (idx < 0) {
+
+                    //An extremely rare case but possible
+                    idx = -idx - 1;
+                    BankAndWaiters.bank[i + 1].list.add(idx, wn);
+
+                } else {
+                    Node bn = BankAndWaiters.bank[i + 1].list.get(idx);
+                    bn.totNbPoss += wn.totNbPoss;
+                }
+            }
+            System.out.println("Time: " + (System.currentTimeMillis() - tStart) / 60000.0);
+
+            //Clerance of memory
+            if (i % Statix.NB_GROUPS != 0) {
+                freeLevel(i);
+            }
+        }
+        long accProb0 = 0;
+        long accProb1 = 0;
+        long accProb2 = 0;
+        long accProb3 = 0;
+        for (int i = 0; i < BankAndWaiters.bank[16].list.size(); i++) {
+            //System.out.print(i+": ");
+            Node n = BankAndWaiters.bank[16].list.get(i);
+            for (int j = 0; j < Statix.NB_GROUPS; j++) {
+                if (n.potsState[0][j] == 0 && n.potsState[1][j] == 0) {
+                    accProb0 += n.totNbPoss;
+                }
+                if (n.potsState[0][j] == 0 && n.potsState[1][j] == 1) {
+                    accProb1 += n.totNbPoss;
+                }
+                if (n.potsState[0][j] == 0 && n.potsState[1][j] == 2) {
+                    accProb2 += n.totNbPoss;
+                }
+                if (n.potsState[0][j] == 0 && n.potsState[2][j] == 0) {
+                    accProb3 += n.totNbPoss;
+                }
+            }
+            //n.printPotsState();
+            //System.out.println(Arrays.toString(n.trSequence));
+        }
+        int level = 16;
+        double b0 = probability(level, accProb0) / 25;
+        double b1 = probability(level, accProb1) / 5;
+        double b2 = probability(level, accProb2) / 10;
+        double b3 = probability(level, accProb3) / 10;
+        System.out.println(accProb0);
+        System.out.println(b0);
+        System.out.println(accProb1);
+        System.out.println(b1);
+        System.out.println(accProb2);
+        System.out.println(b2);
+        System.out.println(accProb3);
+        System.out.println(b3);
+        System.out.println(5 * b0 + b1 + 2 * b2);
+        System.out.println(pairProbability(0, 0, 2, 0));
+        System.out.println(pairProbability(0, 0, 2, 3));
+        System.out.println(pairProbability(0, 0, 2, 4));
+
+    }
+    
+    
+    //From MegaMain
+    
+    public static void main1() {
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("Welcome!");
+        String filename = askWithDefault(scanner, "What file should the teams be loaded from?", teamsFileName);
+        Loading.load(fullName(filename));
+        System.out.println("Should we calculate from scratch? If yes, enter " + GUIL_NO);
+        System.out.println("Otherwise, enter the name of the file from which data will be imported.");
+        String nameToLoad = scanner.next();
+        if (nameToLoad.equals(SYMB_NO)) {
+            System.out.println("Should calculations be saved in a file for next time?");
+            System.out.println("Type the name of the file you wish to use, or  " + GUIL_NO + " for no save.");
+            filename = scanner.next();
+            //String fullName = filename.length <0 
+            if (filename.equals(SYMB_NO)) {
+                filename = null;
+            }
+            CalculusMain.run(fullName(filename));
+
+        } else {
+            try {
+                Stats.loadFromFile(nameToLoad);
+            } catch (InitParseException | IOException ex) {
+                System.out.println(ex);
+            }
+        }
+        boolean still = true;
+
+        while (still) {
+            DebugData.cmdCounter = 0;
+            try {
+                still = manageProbaParamCmd(scanner);
+            } catch (ProbaParamEx ex) {
+                System.out.println(ex);
+            }
+            System.out.println("DebugData.cmdCounter: " + DebugData.cmdCounter);
+        }
+
+    }
+    
+    //From FormerMain
+    public static double pairProbability(int pot0, int cont0, int pot1, int cont1) {
+        return pairProbability((byte) pot0, (byte) cont0, (byte) pot1, (byte) cont1);
+    }
+
+    public static double pairProbability(byte pot0, byte cont0, byte pot1, byte cont1) {
+        byte dataLevel = 24;
+        long sum = 0;
+        for (int i = 0; i < BankAndWaiters.bank[dataLevel].size(); i++) {
+            //System.out.print(i+": ");
+            Node n = BankAndWaiters.bank[dataLevel].get(i);
+            for (int j = 0; j < Statix.nbGROUPS(); j++) {
+                if (n.getCont(pot0, j) == cont0 && n.getCont(pot1, j) == cont1) {
+                    sum += n.getNbPoss();
+                }
+            }
+            //n.printPotsState();
+            //System.out.println(Arrays.toString(n.trSequence));
+        }
+        if (sum == 0) {
+            return 0;
+        }
+        double res = Statix.probability(dataLevel, sum);
+        int isomorphisms = Statix.getContCount(pot0, cont0) * Statix.getContCount(pot1, cont1);
+        return res / isomorphisms;
     }
     //xend
      */

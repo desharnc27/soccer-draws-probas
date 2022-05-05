@@ -17,20 +17,20 @@ import java.util.Arrays;
  */
 public class Stats {
 
-    static long[][] pairSameGroup = new long[Statix.NB_CONTS * 4][Statix.NB_CONTS * 4];
+    static long[][] pairSameGroup = new long[Statix.nbCONTS() * 4][Statix.nbCONTS() * 4];
     static long[][][][][] detailedRoundStats
-            = new long[Statix.NB_GROUPS][Statix.NB_CONTS][Statix.NB_CONTS][Statix.NB_CONTS][Statix.NB_CONTS];
-
-    static int analyzedRounds = 4;
-    static int noRefRounds = 1;//Sould always be 1 unless Node.iscompletable() code gets positively changed.
+            = new long[Statix.nbGROUPS()][Statix.nbCONTS()][Statix.nbCONTS()][Statix.nbCONTS()][Statix.nbCONTS()];
 
     //deprecated
     public static double countryProbability(byte round0, byte cont0, byte round1, byte cont1) {
-        int idx0 = cont0 + round0 * Statix.NB_CONTS;
-        int idx1 = cont1 + round1 * Statix.NB_CONTS;
-        long fact = Misc.fact(Statix.NB_GROUPS);
-        long denom = Misc.power(fact, analyzedRounds) / Statix.NB_GROUPS;
-        return (Stats.pairSameGroup[idx0][idx1] + 0.0) / denom / Statix.pots[round0][cont0] / Statix.pots[round1][cont1];
+        int idx0 = cont0 + round0 * Statix.nbCONTS();
+        int idx1 = cont1 + round1 * Statix.nbCONTS();
+        long fact = Misc.fact(Statix.nbGROUPS());
+        long denom = Misc.power(fact, Statix.NB_ANALYZED_ROUNDS) / Statix.nbGROUPS();
+        return (pairSameGroup[idx0][idx1] + 0.0)
+                / denom
+                / Statix.getContCount(round0, cont0)
+                / Statix.getContCount(round1, cont1);
     }
 
     public static long getSpecificProbLong(int gr, byte[] conts) {
@@ -89,15 +89,15 @@ public class Stats {
                 if (j != 0) {
                     System.out.print(",");
                 }
-                int u = Statix.NB_CONTS;
+                int u = Statix.nbCONTS();
                 System.out.print(countryProbability((byte) (i / u), (byte) (i % u), (byte) (j / u), (byte) (j % u)));
             }
             System.out.println();
         }
     }
 
-    static void feed(byte[][] potsState, long num) {
-        for (int gr = 0; gr < Statix.NB_GROUPS; gr++) {
+    public static void feed(byte[][] potsState, long num) {
+        for (int gr = 0; gr < Statix.nbGROUPS(); gr++) {
             int t0 = potsState[0][gr];
             int t1 = potsState[1][gr];
             int t2 = potsState[2][gr];
@@ -105,13 +105,13 @@ public class Stats {
             detailedRoundStats[gr][t0][t1][t2][t3] += num;
 
         }
-        for (int gr = 0; gr < Statix.NB_GROUPS; gr++) {
-            for (int i = 0; i < Stats.analyzedRounds; i++) {
-                for (int j = 0; j < Stats.analyzedRounds; j++) {
+        for (int gr = 0; gr < Statix.nbGROUPS(); gr++) {
+            for (int i = 0; i < Statix.NB_ANALYZED_ROUNDS; i++) {
+                for (int j = 0; j < Statix.NB_ANALYZED_ROUNDS; j++) {
                     byte cont0 = potsState[i][gr];
                     byte cont1 = potsState[j][gr];
-                    int idx0 = cont0 + i * Statix.NB_CONTS;
-                    int idx1 = cont1 + j * Statix.NB_CONTS;
+                    int idx0 = cont0 + i * Statix.nbCONTS();
+                    int idx1 = cont1 + j * Statix.nbCONTS();
                     Stats.pairSameGroup[idx0][idx1] += num;
                 }
             }
@@ -119,16 +119,16 @@ public class Stats {
     }
 
     public static void StoreInfile(String filename) {
-        int chainLen = (int) (2 + Statix.NB_GROUPS * Misc.power(Statix.NB_CONTS, 4) * Long.BYTES);
+        int chainLen = (int) (2 + Statix.nbGROUPS() * Misc.power(Statix.nbCONTS(), 4) * Long.BYTES);
         byte[] byteChain = new byte[chainLen];
         int idx = 0;
-        byteChain[idx++] = Statix.NB_GROUPS;
-        byteChain[idx++] = Statix.NB_CONTS;
-        for (int gr = 0; gr < Statix.NB_GROUPS; gr++) {
-            for (int p0 = 0; p0 < Statix.NB_CONTS; p0++) {
-                for (int p1 = 0; p1 < Statix.NB_CONTS; p1++) {
-                    for (int p2 = 0; p2 < Statix.NB_CONTS; p2++) {
-                        for (int p3 = 0; p3 < Statix.NB_CONTS; p3++) {
+        byteChain[idx++] = Statix.nbGROUPS();
+        byteChain[idx++] = Statix.nbCONTS();
+        for (int gr = 0; gr < Statix.nbGROUPS(); gr++) {
+            for (int p0 = 0; p0 < Statix.nbCONTS(); p0++) {
+                for (int p1 = 0; p1 < Statix.nbCONTS(); p1++) {
+                    for (int p2 = 0; p2 < Statix.nbCONTS(); p2++) {
+                        for (int p3 = 0; p3 < Statix.nbCONTS(); p3++) {
                             byte[] bytes = Misc.longToBytes(detailedRoundStats[gr][p0][p1][p2][p3]);
                             for (byte by : bytes) {
                                 byteChain[idx++] = by;
@@ -163,18 +163,18 @@ public class Stats {
         int tempNbGroups = byteChain[idx++];
         int tempNbConts = byteChain[idx++];
 
-        if (Statix.NB_GROUPS != tempNbGroups || Statix.NB_CONTS != tempNbConts) {
-            String mismatchParameter = Statix.NB_GROUPS == tempNbGroups
+        if (Statix.nbGROUPS() != tempNbGroups || Statix.nbCONTS() != tempNbConts) {
+            String mismatchParameter = Statix.nbGROUPS() == tempNbGroups
                     ? "Number of mono-continents or Number of hybrids" : "number of groups";
             throw InitParseException.makeDataMismatch(mismatchParameter);
         }
-        //Statix.NB_GROUPS = byteChain[idx++];
-        //Statix.NB_CONTS = byteChain[idx++];
-        for (int gr = 0; gr < Statix.NB_GROUPS; gr++) {
-            for (int p0 = 0; p0 < Statix.NB_CONTS; p0++) {
-                for (int p1 = 0; p1 < Statix.NB_CONTS; p1++) {
-                    for (int p2 = 0; p2 < Statix.NB_CONTS; p2++) {
-                        for (int p3 = 0; p3 < Statix.NB_CONTS; p3++) {
+        //Statix.nbGROUPS() = byteChain[idx++];
+        //Statix.nbCONTS() = byteChain[idx++];
+        for (int gr = 0; gr < Statix.nbGROUPS(); gr++) {
+            for (int p0 = 0; p0 < Statix.nbCONTS(); p0++) {
+                for (int p1 = 0; p1 < Statix.nbCONTS(); p1++) {
+                    for (int p2 = 0; p2 < Statix.nbCONTS(); p2++) {
+                        for (int p3 = 0; p3 < Statix.nbCONTS(); p3++) {
                             byte[] bytes = Arrays.copyOfRange(byteChain, idx, idx + Long.BYTES);
                             long val = Misc.bytesToLong(bytes);
                             detailedRoundStats[gr][p0][p1][p2][p3] = val;

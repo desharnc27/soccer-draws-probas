@@ -6,6 +6,9 @@ Number of mono-continents,5
 Hybrid continents,1-4
 Number of hosts,1
 
+Mono-continents minima,1,0,0,0,0
+Mono-continents maxima,2,1,1,1,1
+
 //Put the teams in pot order (the nbGroups first teams will be in first pot, then the next nbGroups teams will be in second pot, etc)
 //They must all be followed by their continent id (seperated by comma)
 //To choose which team(s) is(are) host(s), place it(them) first. Hosts are always in pot 1

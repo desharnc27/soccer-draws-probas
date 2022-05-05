@@ -17,20 +17,23 @@ import tools.GeneralMeths;
  */
 public class Statix {
 
-    static byte NB_MONOCONTS = 5;
-    static byte NB_CONTS = 6;
-    static byte NB_GROUPS = 8;
-    static ArrayList<Byte> initConstDraws;
-    static ArrayList<ArrayList<Byte>> hybrids;
+    public static final StateComparator scmp = new StateComparator();
 
-    static Team[][] teams;
+    private static byte NB_MONOCONTS = 5;
+    private static byte NB_CONTS = 6;
+    private static byte NB_GROUPS = 8;
+    private static ArrayList<Byte> initConstDraws;
+    private static ArrayList<ArrayList<Byte>> hybrids;
 
-    static final StateComparator scmp = new StateComparator();
+    private static Team[][] teams;
 
-    static int[][] pots;
+    private static int[][] pots;
 
-    static int[] minPerGroup;
-    static int[] maxPerGroup;
+    private static int[] minPerGroup;
+    private static int[] maxPerGroup;
+
+    public static final int NB_ANALYZED_ROUNDS = 4;
+    public static final int ALGO_ASCEND_SWITCH = 1;//Sould always be 1 unless Node.iscompletable() code gets positively changed.
 
     public static void setStatix(int[][] potsByCont, int nbGroups, int nbMonoConts,
             ArrayList<Byte> initConstDraws, ArrayList<ArrayList<Byte>> hybrids) {
@@ -64,8 +67,58 @@ public class Statix {
 
     public static long commonDenominator() {
         long bigFact = Misc.fact(NB_GROUPS);
-        long smallFact = Misc.fact(NB_GROUPS - Statix.initConstDraws.size());
+        long smallFact = Misc.fact(NB_GROUPS - nbHOSTS());
         return bigFact * bigFact * bigFact * smallFact;
+    }
+
+    public static long commonDenominator(int level) {
+        if (level <= Statix.nbHOSTS()) {
+            return 1;
+        }
+        int fullRounds = level / NB_GROUPS;
+        int inTrLevel = level % NB_GROUPS;
+        long bigFact = Misc.fact(NB_GROUPS);
+        long smallFact0 = Misc.fact(NB_GROUPS - inTrLevel);
+        long smallFact1 = Misc.fact(NB_GROUPS - nbHOSTS());
+        long denom = smallFact1 * Misc.power(bigFact, fullRounds) / (smallFact0);
+        return denom;
+    }
+
+    public static double probability(int level, long nbPoss) {
+        return nbPoss / (double) commonDenominator(level);
+    }
+
+    public static void setContinentBounds(int[] minima, int[] maxima) {
+        minPerGroup = minima;
+        maxPerGroup = maxima;
+    }
+
+    public static int getMonoContMax(byte cont) {
+        return Statix.maxPerGroup[cont];
+    }
+
+    public static int getMonoContMin(byte cont) {
+        return Statix.minPerGroup[cont];
+    }
+
+    public static byte getHostCont(int hostIdx) {
+        return Statix.initConstDraws.get(hostIdx);
+    }
+
+    public static int nbHOSTS() {
+        return Statix.initConstDraws.size();
+    }
+
+    public static byte nbMONOCONTS() {
+        return Statix.NB_MONOCONTS;
+    }
+
+    public static byte nbCONTS() {
+        return Statix.NB_CONTS;
+    }
+
+    public static byte nbGROUPS() {
+        return Statix.NB_GROUPS;
     }
 
     //Methods for teams
@@ -101,10 +154,6 @@ public class Statix {
         return String.join("\n", bigArr);
     }
 
-    public static int nbGroups() {
-        return Statix.NB_GROUPS;
-    }
-
     public static Team getTeam(int rd, int idx) {
         return teams[rd][idx];
     }
@@ -124,7 +173,7 @@ public class Statix {
             if (i != 0) {
                 denomAcc *= Statix.getContCount((byte) i, teamQuatuor[i].cont());
             } else {
-                if (teamQuatuorArr[i] < Statix.initConstDraws.size()) {
+                if (teamQuatuorArr[i] < nbHOSTS()) {
                     //Host case
                     if (teamQuatuorArr[i] != gr) {
                         return 0;
@@ -148,19 +197,6 @@ public class Statix {
             conts[i] = teamQuatuor[i].cont();
         }
         return Stats.getSpecificProbLong(gr, conts) / denomAcc + 0.0;
-    }
-
-    public static void setContinentBounds(int[] minima, int[] maxima) {
-        minPerGroup = minima;
-        maxPerGroup = maxima;
-    }
-
-    static int getMonoContMax(byte cont) {
-        return Statix.maxPerGroup[cont];
-    }
-
-    static int getMonoContMin(byte cont) {
-        return Statix.minPerGroup[cont];
     }
 
 }

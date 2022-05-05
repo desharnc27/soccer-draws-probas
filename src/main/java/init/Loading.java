@@ -147,6 +147,10 @@ public class Loading {
                     if (nbGroups < 0) {
                         throw InitParseException.makeMiss(filename, line, ngrStr);
                     }
+                    if (nbGroups > 8) {
+                        String tempMessage = "No implementation yet for more than 8 groups";
+                        throw InitParseException.makeVague(filename, ngrStr, tempMessage);
+                    }
                     if (nbRounds < 0) {
                         throw InitParseException.makeMiss(filename, line, nrdStr);
                     }
@@ -168,16 +172,13 @@ public class Loading {
                     if (tempMessage != null) {
                         throw InitParseException.makeVague(filename, hcStr, tempMessage);
                     }
-                    minima = new int[nbMonoConts];
-                    maxima = new int[nbMonoConts];
-
                     earlyStepsValidated = true;
                     nbConts = nbMonoConts + hybrids.size();
                     potsByCont = new int[nbRounds][nbConts];
                     teams = new Team[nbRounds][nbGroups];
                 }
 
-                //At that point, remainings command can only define football teams, or minima/maxima arrays
+                //middle steps
                 if (!middleStepsValidated) {
                     //Middle steps parsing
                     switch (args[0]) {
@@ -212,9 +213,12 @@ public class Loading {
                         }
                     }
                     //Apply middle steps
+                    middleStepsValidated = true;
+
                     Statix.setContinentBounds(minima, maxima);
                 }
 
+                //Late steps. At that point, remainings command can only define football teams
                 if (teamIdx == nbGroups * nbRounds) {
                     String tempMessage = "Too much teams defined. " + "It cannot be over ";
                     tempMessage += nbRounds + " x " + nbGroups + " = " + (nbGroups * nbRounds);
@@ -272,13 +276,6 @@ public class Loading {
         Statix.setStatix(GeneralMeths.getCopy(potsByCont), nbGroups, nbMonoConts, hostList, hybrids);
 
         System.out.println("Initial data parsing was succesful!");
-        Misc.print2D(potsByCont);
-        for (int i = 0; i < hostList.size(); i++) {
-            System.out.print(hostList.get(i));
-        }
-        System.out.println();
-        System.out.println("nbConts: " + nbConts);
-        System.out.println();
         System.out.println(Statix.allTeamsToString(true));
 
     }

@@ -1,0 +1,23 @@
+Input: a combination of scenarios
+Output: the probability that one of these scenarios happens
+
+Input detail:
+
+Five sets of values separated with 4 commas: subset of group letters, subset of pot 1, subset of pot 2, subset of pot 3, subset of pot 4
+Group letters/teams of same pot can be enumerated with "/". You can also use a wild card "*" to denote any possible value.
+Examples (assuming qatar2022 dataset):
+*,France,*,*,Ghana -> will display the probability that France and Ghana end in the same group.
+C,*,Uruguay/Mexixo,Serbia,* -> will display the probability that Serbia and either one of Uruguay and Mexico end in group C.
+
+To minimize typing, you can type a prefix of the name of a team instead of its full name.
+Also, input is not case sensitive.
+*,Br,cro/Germa/n,*,sAu -> is equivalent to *,Brasil,Croatia/Germany/Netherlands,*,Saudi Arabia
+*,*,Ne,*,Ca -> will return an error since Ca is ambiguous between Canada and Cameroon
+
+Note: don't add any spaces other than those already present in the name of a country.
+
+Note: at least one of the subset must contain a single element (no enumeration,no wild card).
+Reason: it's too complicated for this app to calculate probabilities for scenarios which do not share a common element.
+Examples:
+*,*,Sen,*,Can/Ec -> Ok, will be computed becuase Senegal appears without any other team of its pot.
+B/F,arg/bra,*,Mor/Jap,* -> will return an error.

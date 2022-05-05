@@ -5,10 +5,15 @@
  */
 package central;
 
+import exception.ProbaParamEx;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.PrintWriter;
-import java.nio.ByteBuffer;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  *
@@ -137,16 +142,6 @@ public class Misc {
         }
     }
 
-    static boolean tooMuchAfrica(byte[] b) {
-        int count = 0;
-        for (int i = 0; i < b.length; i++) {
-            if (b[i] == 3) {
-                count++;
-            }
-        }
-        return count > 3;
-    }
-
     static String[] mapToString(byte[] arr) {
         String[] res = new String[arr.length];
         for (int i = 0; i < arr.length; i++) {
@@ -239,5 +234,35 @@ public class Misc {
             }
         }
         return true;
+    }
+
+    public static String guillemet(String s) {
+        return "\"" + s + "\"";
+    }
+
+    public static void displayFile(String filename) {
+        Path path = Paths.get(filename);
+        List<String> lines;
+        try {
+            lines = Files.readAllLines(path);
+            for (int i = 0; i < lines.size(); i++) {
+                System.out.println(lines.get(i));
+            }
+        } catch (IOException ex) {
+            System.out.println("File not found: " + filename);
+        }
+
+    }
+
+    public static String ambiguousStr(String arg, String poss1, String poss2) {
+        return (arg + " is ambiguous because it matches at least two values: " + poss1 + " and " + poss2);
+    }
+
+    public static String inputUnderstoodAs(String arg, String interp) {
+        return ("Input " + arg + " understood as: " + interp);
+    }
+
+    public static String inputUnsolved(String input) {
+        return ("Input " + input + " not understood.");
     }
 }

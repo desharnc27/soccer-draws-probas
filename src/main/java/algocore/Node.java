@@ -3,35 +3,114 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package central;
+package algocore;
 
+import central.BankAndWaiters;
+import central.DebugData;
+import central.Misc;
+import central.NodeList;
+import central.StateComparator;
+import central.Statix;
+import central.Stats;
+import central.TimerManager;
 import java.util.Arrays;
-import java.util.Collections;
 import tools.GeneralMeths;
 
 /**
  *
  * @author desharnc27
  */
-public final class Node {
+public class Node {
 
-    int level;
-    byte[][] potsState;
-    int[] trRemains;
-    long totNbPoss;
+    private int level;
+    private byte[][] potsState;
+    private int[] trRemains;
+    private long totNbPoss;
 
-    double probability() {
-        return CalculusMain.probability(level, totNbPoss);
+    public long getNbPoss() {
+        return totNbPoss;
+    }
+
+    public int getLevel() {
+        return level;
+    }
+
+    public int getRound() {
+        return level / Statix.nbGROUPS();
+    }
+
+    public int get() {
+        return level / Statix.nbGROUPS();
+    }
+
+    public byte[][] copyPSWithPlusVirginLine() {
+        return Misc.copyPlusVirginLine(potsState);
+    }
+
+    public byte[][] copyPotsState() {
+        return GeneralMeths.getCopy(potsState);
+    }
+
+    public boolean hazardeousVirginLineCheck() {
+        return level / Statix.nbGROUPS() < potsState.length;
+
+    }
+
+    public byte getCont(int round, int group) {
+        return potsState[round][group];
+    }
+
+    public int getPotStateLen() {
+        return potsState.length;
+    }
+
+    public int potLevCompare(Node other) {
+        int comp0 = getLevel() - other.getLevel();
+        if (comp0 != 0) {
+            return comp0;
+        }
+        comp0 = potsState.length - other.potsState.length;
+        if (comp0 != 0) {
+            return comp0;
+        }
+        return Misc.compareRev(potsState, other.potsState);
+    }
+
+    //Using this function should never be necessary, unless for debugging purposes
+    public void setPotState(byte[][] potState) {
+        this.potsState = potState;
+    }
+
+    //Using this function should never be necessary, unless for debugging purposes
+    public void resyncLevel() {
+        level = 0;
+        for (int i = 0; i < potsState.length; i++) {
+            for (int j = 0; j < potsState[i].length; j++) {
+                if (potsState[i][j] >= 0) {
+                    level++;
+                }
+            }
+        }
+    }
+
+    public double probability() {
+        /*int fullRounds = level / Statix.nbGROUPS();
+        int inTrLevel = level % Statix.nbGROUPS();
+        long bigFact = Misc.fact(Statix.nbGROUPS());
+        long smallFact = Misc.fact(Statix.nbGROUPS() - inTrLevel);
+        long denom = Misc.power(bigFact, fullRounds + 1) / (Statix.nbGROUPS() * smallFact);
+        return this.totNbPoss / ((double) (denom));*/
+        return totNbPoss / (double) Statix.commonDenominator(level);
     }
 
     void expand(NodeList childs, NodeList waiters, AscendStorer asSt, byte[] perm) {
 
-        if (level < Statix.initConstDraws.size()) {
+        if (level < Statix.nbHOSTS()) {
             //Host case
             byte group = (byte) level;
-            byte cont = Statix.initConstDraws.get(group);
+            byte cont = Statix.getHostCont(group);
             Node child = new Node(this, cont, group, 1);
-            childs.list.add(child);
+            childs.add(child);
             return;
         }
         for (byte cont = 0; cont < trRemains.length; cont++) {
@@ -45,9 +124,9 @@ public final class Node {
             boolean disorderHint = child.hasDisorderHint(group);
 
             if (disorderHint) {
-                waiters.list.add(child);
+                waiters.add(child);
             } else {
-                childs.list.add(child);
+                childs.add(child);
             }
 
         }
@@ -67,21 +146,29 @@ public final class Node {
      * @param qatarFloat useless parameter, just to distinguish from level 0
      * constructors
      */
-    public Node(float qatarFloat) {
+    /*public Node(float qatarFloat) {
         this();
-        for (int i = 0; i < Statix.initConstDraws.size(); i++) {
-            byte cont = Statix.initConstDraws.get(i);
+        for (byte  i = 0; i < Statix.nbHOSTS(); i++) {
+            byte cont = Statix.getHostCont(i);
             potsState[0][level] = cont;
             trRemains[cont]--;
             level++;
 
         }
+    }*/
+    public static Node postHostsNode() {
+        Node res = new Node();
+        for (int i = 0; i < Statix.nbHOSTS(); i++) {
+            res = new Node(res, Statix.getHostCont(i), (byte) i, 1);
+        }
+        return res;
+
     }
 
     public Node() {
         level = 0;
-        potsState = new byte[1][Statix.NB_GROUPS];
-        for (int i = 0; i < Statix.NB_GROUPS; i++) {
+        potsState = new byte[1][Statix.nbGROUPS()];
+        for (int i = 0; i < Statix.nbGROUPS(); i++) {
             potsState[0][i] = -1;
         }
         trRemains = Statix.getCopyOfPot(0);
@@ -90,18 +177,18 @@ public final class Node {
 
     public Node(Node parent, byte cont, byte group, long newNbPoss) {
         level = parent.level + 1;
-        int round = level / Statix.NB_GROUPS;
+        int round = level / Statix.nbGROUPS();
 
-        int inTrLevel = level % Statix.NB_GROUPS;
+        int inTrLevel = level % Statix.nbGROUPS();
 
         if (inTrLevel == 0) {
             if (round < 4) {
                 trRemains = Statix.getCopyOfPot(round);
-                potsState = new byte[round + 1][Statix.NB_GROUPS];
+                potsState = new byte[round + 1][Statix.nbGROUPS()];
                 for (int i = 0; i < round; i++) {
-                    System.arraycopy(parent.potsState[i], 0, potsState[i], 0, Statix.NB_GROUPS);
+                    System.arraycopy(parent.potsState[i], 0, potsState[i], 0, Statix.nbGROUPS());
                 }
-                for (int i = 0; i < Statix.NB_GROUPS; i++) {
+                for (int i = 0; i < Statix.nbGROUPS(); i++) {
                     potsState[round][i] = -1;
                 }
                 potsState[round - 1][group] = cont;
@@ -109,10 +196,6 @@ public final class Node {
                 trRemains = new int[0];
                 potsState = GeneralMeths.getCopy(parent.potsState);
                 potsState[round - 1][group] = cont;
-                if (!this.completeValidation()) {
-                    this.printPotsState();
-                    int a = 1 / 0;
-                }
             }
 
         } else {
@@ -148,7 +231,7 @@ public final class Node {
         if (lineToCheck < 0) {
             return false;
         }
-        for (int i = lastGroup + 1; i < Statix.NB_GROUPS; i++) {
+        for (int i = lastGroup + 1; i < Statix.nbGROUPS(); i++) {
             if (potsState[lineToCheck][i] >= 0) {
                 return true;
             }
@@ -166,11 +249,11 @@ public final class Node {
      * @return
      */
     boolean isCompletable(byte teamAdd, byte groupAdd) {
-        int round = level / Statix.NB_GROUPS;
+        int round = level / Statix.nbGROUPS();
         potsState[round][groupAdd] = teamAdd;
         trRemains[teamAdd]--;
         boolean res;
-        if (level % Statix.NB_GROUPS == -1) {
+        if (level % Statix.nbGROUPS() == -1) {
             res = true;
         } else {
             res = isCompletable();
@@ -197,104 +280,62 @@ public final class Node {
         if (potsState[round][group] >= 0) {
             return false;
         }
-        byte[] conts = getMonoConts(multiCont);
+        byte[] conts = Statix.getMonoconts(multiCont);
 
         //maxima checks
-        for (byte cont : conts) {
+        /*for (byte cont : conts) {
             int tolerance = Statix.getMonoContMax(cont);
             for (int i = 0; i < round; i++) {
                 if (cont == potsState[i][group]) {
                     tolerance--;
                 }
-                /*try {
-                    if (cont == potsState[i][group]) {
-                        if (!euroExtra) {
-                            return false;
-                        }
-                        euroExtra = false;
-                    }
-                } catch (Exception e) {
-                    int a = 1 / 0;
-                }*/
 
             }
             if (tolerance == 0) {
                 return false;
             }
 
-        }
-        if (round < 3) {
-            return true;
-        }
-        //minima checks
-        int[] bilan = new int[Statix.NB_MONOCONTS];
+        }*/
+        //int[] bilan = new int[Statix.nbMONOCONTS()];
+        byte[] upperBilan = new byte[Statix.nbMONOCONTS()];
+        byte[] lowerBilan = new byte[Statix.nbMONOCONTS()];
         for (int i = 0; i < conts.length; i++) {
-            bilan[conts[i]]++;
+            upperBilan[conts[i]]++;
+            if (conts[i] < Statix.nbMONOCONTS()) {
+                lowerBilan[conts[i]]++;
+            }
         }
-        for (int r = 0; r < 3; r++) {
+        for (int r = 0; r < round; r++) {
             multiCont = potsState[r][group];
-            conts = getMonoConts(multiCont);
+            conts = Statix.getMonoconts(multiCont);
             for (int i = 0; i < conts.length; i++) {
-                bilan[conts[i]]++;
-            }
-        }
-        for (byte i = 0; i < bilan.length; i++) {
-            if (bilan[i] < Statix.getMonoContMin(i)) {
-                return false;
-            }
-        }
-        /*//At least one euro team
-        if (round >= 3 && multiCont != 0) {
-            for (int i = 0; i < 3; i++) {
-                if (potsState[i][group] == 0) {
-                    return true;
+                try {
+                    upperBilan[conts[i]]++;
+                    if (conts[i] < Statix.nbMONOCONTS()) {
+                        lowerBilan[conts[i]]++;
+                    }
+                } catch (Exception e) {
+                    int debug = 0;
                 }
             }
-            return false;
-        }*/
+        }
+        for (byte i = 0; i < Statix.nbMONOCONTS(); i++) {
+            //minima
+            if (lowerBilan[i] < Statix.getMonoContMin(i) + round - 3) {
+                return false;
+            }
+            //maxima
+            if (upperBilan[i] > Statix.getMonoContMax(i)) {
+                return false;
+            }
+
+        }
         return true;
 
     }
 
-    /**
-     * checks if continents cont and monoCont match. if cont is not a monocont,
-     * checks if one of its contients matches cont.
-     *
-     * @param monoCont continent (cannot be a multiple continent)
-     * @param cont continent (can be a multiple continent)
-     * @return true if monoCont and cont match, false otherwise.
-     */
-    static boolean sameCont(byte monoCont, byte cont) {
-        if (cont < Statix.NB_CONTS) {
-            return (monoCont == cont);
-        }
-        if (cont == Statix.NB_MONOCONTS + 1) {
-            switch (monoCont) {
-                case 1,4:
-                    return true;
-                default:
-                    return false;
-
-            }
-        }
-        return false;
-    }
-
-    static byte[] getMonoConts(byte cont) {
-        if (cont < Statix.NB_MONOCONTS) {
-            return (new byte[]{cont});
-        }
-        if (cont == Statix.NB_MONOCONTS) {
-            return (new byte[]{1, 4});
-        }
-
-        System.out.println("WTF: static byte [] getMonoConts(byte multiCont) ");
-        return null;
-
-    }
-
-    byte leftMostPlace(byte cont) {
-        for (byte i = 0; i < Statix.NB_GROUPS; i++) {
+    public byte leftMostPlace(byte cont) {
+        for (byte i = 0; i < Statix.nbGROUPS(); i++) {
 
             //You may uncomment 2 following lines while debugging to break continental constraints
             //if (potsState[potsState.length-1][i]==-1)
@@ -310,7 +351,7 @@ public final class Node {
         System.out.println("Fatal error: dead end, this continent can't fit anywhere: " + cont);
         //Major bug, program should never reach this line 
         this.printPotsState();
-        int a = 1 / 0;
+        int crash = 1 / 0;
 
         return -1;
     }
@@ -319,13 +360,13 @@ public final class Node {
         if (new StateComparator().compare(this, DebugData.node) == 0) {
             int debug = 1;
         }
-        int round = level / Statix.NB_GROUPS;
-        byte[] toResearch = new byte[Statix.NB_GROUPS];
+        int round = level / Statix.nbGROUPS();
+        byte[] toResearch = new byte[Statix.nbGROUPS()];
         byte[] invPerm = Misc.reciprocal(perm);
-        for (int i = 0; i < Statix.NB_GROUPS; i++) {
+        for (int i = 0; i < Statix.nbGROUPS(); i++) {
             toResearch[invPerm[i]] = potsState[round][i];
         }
-        for (byte i = 0; i < Statix.NB_GROUPS; i++) {
+        for (byte i = 0; i < Statix.nbGROUPS(); i++) {
             if (potsState[round][i] != -1) {
                 continue;
             }
@@ -342,17 +383,17 @@ public final class Node {
         System.out.println("Fatal error: dead end, this continent can't fit anywhere: " + cont);
         //Major bug, program should never reach this line 
         this.printPotsState();
-        int a = 1 / 0;
+        int crash = 1 / 0;
 
         return -1;
     }
 
     final void putInWaiters() {
-        BankAndWaiters.waiters[level].list.add(this);
+        BankAndWaiters.waiters[level].add(this);
     }
 
     final void putInBank() {
-        BankAndWaiters.bank[level].list.add(this);
+        BankAndWaiters.bank[level].add(this);
     }
 
     @Override
@@ -383,42 +424,41 @@ public final class Node {
      */
     public NodeList octoChilds(AscendStorer asSt, byte[] perm) {
         NodeList actual = new NodeList();
-        actual.list.add(this);
+        actual.add(this);
 
         //breath first search , level by level
-        for (int i = 0; i < Statix.NB_GROUPS; i++) {
+        for (int i = 0; i < Statix.nbGROUPS(); i++) {
             NodeList nextChilds = new NodeList();
             NodeList nextWaiters = new NodeList();
 
             //Qatar first mandatory
-            if (this.level == 0 && i == 1) {
-                for (int k = 0; k < actual.list.size(); k++) {
-                    Node n = actual.list.get(k);
-                    if (n.potsState[0][0] == 4) {
+            /*if (this.level == 0 && i == 1) {
+                for (int k = 0; k < actual.size(); k++) {
+                    Node n = actual.get(k);
+                    if (n.potsState[0][level] == Statix.) {
 
                     } else {
                         actual.list.remove(k);
                         k--;
                     }
                 }
-            }
-
-            int limit = actual.list.size();
+            }*/
+            int limit = actual.size();
             for (int j = 0; j < limit; j++) {
-                Node node = actual.list.get(j);
+                Node node = actual.get(j);
                 node.expand(nextChilds, nextWaiters, asSt, perm);
             }
             nextChilds.sort(Statix.scmp);
-            for (int j = 0; j < nextWaiters.list.size(); j++) {
-                Node wn = nextWaiters.list.get(j);
-                int idx = Collections.binarySearch(nextChilds.list, wn, Statix.scmp);
+            for (int j = 0; j < nextWaiters.size(); j++) {
+                Node wn = nextWaiters.get(j);
+                int idx = nextChilds.binarysearch(wn);
                 if (idx < 0) {
                     //An extremely rare case but possible
                     idx = -idx - 1;
-                    nextChilds.list.add(idx, wn);
+                    nextChilds.add(idx, wn);
 
                 } else {
-                    Node bn = nextChilds.list.get(idx);
+                    Node bn = nextChilds.get(idx);
                     bn.totNbPoss += wn.totNbPoss;
                 }
             }
@@ -430,8 +470,16 @@ public final class Node {
     }
 
     public void bigExpand() {
-        int round = level / Statix.NB_GROUPS;
-        if (round == Stats.analyzedRounds) {
+        /*System.out.println("----");
+        this.printPotsState();
+        System.out.println("totNbPoss: "+totNbPoss);
+        System.out.println("----");*/
+        if (new StateComparator().compare(this, DebugData.node) == 0) {
+            int debug = 1;
+        }
+
+        int round = level / Statix.nbGROUPS();
+        if (round == Statix.NB_ANALYZED_ROUNDS) {
             /*if (DebugData.diffCounter==0){
                 this.printPotsState();
                 leftRightExpand((byte)0, null);
@@ -439,12 +487,14 @@ public final class Node {
 
             DebugData.diffCounter++;
             DebugData.possCounter += this.totNbPoss;
+            DebugData.probCounter += this.probability();
 
             Stats.feed(potsState, this.totNbPoss);
             return;
         }
         NodeList octoChilds;
-        if (round >= Stats.noRefRounds && round < Stats.analyzedRounds) {
+
+        if (round >= Statix.ALGO_ASCEND_SWITCH && round < Statix.NB_ANALYZED_ROUNDS) {
             byte[][] ascendStorerPerm = AscendStorer.getAscendStorerPerm(this);
             byte[] perm = ascendStorerPerm[round];
 
@@ -452,23 +502,29 @@ public final class Node {
             octoChilds = octoChilds(asSt, perm);
             if (round == 3) {
                 DebugData.tanosCounter++;
-                if (DebugData.tanosCounter % 1000 == 0) {
+                /*if (DebugData.tanosCounter % 1000 == 0) {
                     System.out.println(DebugData.tanosCounter);
-                }
+                }*/
             }
         } else {
             octoChilds = octoChilds(null, null);
         }
-        for (int i = 0; i < octoChilds.list.size(); i++) {
-            Node n = octoChilds.list.get(i);
+        for (int i = 0; i < octoChilds.size(); i++) {
+            if (round < 2 && !DebugData.debging) {
+                TimerManager.notifyCompletion(round, octoChilds.size());
+            }
+            Node n = octoChilds.get(i);
             n.bigExpand();
+
         }
 
     }
 
-    protected void bigLeftRightExpandWak(AscendStorer asSt, int roundToDetail) {
-        byte groupIdx = (byte) (level % Statix.NB_GROUPS);
-        byte round = (byte) (level / Statix.NB_GROUPS);
+    protected void asStLeftToRightExpand(AscendStorer asSt, int roundToDetail) {
+        //if (Math.random()<.0001)
+        //    this.printPotsState();
+        byte groupIdx = (byte) (level % Statix.nbGROUPS());
+        byte round = (byte) (level / Statix.nbGROUPS());
         //AscendStorer newAscendStorer;
         boolean virginLineAdd = false;
 
@@ -479,26 +535,31 @@ public final class Node {
         if (groupIdx == 0) {
             //System.out.println(Arrays.toString(potsState[3]));
             if (round == roundToDetail + 1) {
-                if (round == Stats.analyzedRounds || !AscendStorer.deadEndOnNextLevel(this)) {
+                if (round == Statix.NB_ANALYZED_ROUNDS || !AscendStorer.deadEndOnNextLevel(this)) {
+
                     asSt.injectParts(potsState[roundToDetail]);
                 }
                 return;
             }
-            if (!hasAscendingColumns()) {
+            if (!hasTraule()) {//!hasAscendingColumns() qscg
                 return;
             }
             if (round == roundToDetail) {
                 newDygon = true;
                 asSt = AscendStorer.buildWithPots(potsState);
+                if (new StateComparator().compare(this, DebugData.node) == 0) {
+                    int debug = 1;
+                }
 
             }
-
-            virginLineAdd = true;
-            potsState = Misc.addVirginLine(potsState);
-            trRemains = Statix.getCopyOfPot(round);
+            if (round != 0) {
+                virginLineAdd = true;
+                potsState = Misc.addVirginLine(potsState);
+                trRemains = Statix.getCopyOfPot(round);
+            }
 
         }
-        for (byte i = 0; i < Statix.NB_CONTS; i++) {
+        for (byte i = 0; i < Statix.nbCONTS(); i++) {
             if (trRemains[i] == 0) {
                 continue;
             }
@@ -512,32 +573,49 @@ public final class Node {
             potsState[round][groupIdx] = i;
             level++;
 
-            bigLeftRightExpandWak(asSt, roundToDetail);
+            asStLeftToRightExpand(asSt, roundToDetail);
             level--;
             trRemains[i]++;
             potsState[round][groupIdx] = -1;
         }
         if (virginLineAdd) {
             potsState = Misc.removeVirginLine(potsState);
-            trRemains = new int[Statix.NB_CONTS];
+            trRemains = new int[Statix.nbCONTS()];
         }
         if (newDygon) {
-            int ascendStorerIdx = Collections.binarySearch(AscendStorer.ascendStorerBank, asSt);
-            ascendStorerIdx = -ascendStorerIdx - 1;
-            AscendStorer.ascendStorerBank.add(ascendStorerIdx, asSt);
+            AscendStorer.findAndInsert(asSt);
         }
 
     }
 
-    public void wakProcess() {
-        for (int i = Stats.analyzedRounds - 1; i >= Stats.noRefRounds; i--) {
-            bigLeftRightExpandWak(null, i);
-            System.out.println("QwErtYuIoPP");
+    public void buildAscendStorageLayers() {
+        for (int i = Statix.NB_ANALYZED_ROUNDS - 1; i >= Statix.ALGO_ASCEND_SWITCH; i--) {
+            asStLeftToRightExpand(null, i);
         }
     }
 
     public boolean hasAscendingColumns() {
-        for (int i = 1; i < Statix.NB_GROUPS - 1; i++) {
+        for (int i = Statix.nbHOSTS(); i < Statix.nbGROUPS() - 1; i++) {
+            if (AscendStorer.columnCompare(potsState, i, i + 1) > 0) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public boolean hasTraule() {
+        for (int i = 0; i < Statix.nbHOSTS(); i++) {
+            for (int j = i + 1; j < Statix.nbGROUPS(); j++) {
+                if (potsState[0][i] == potsState[0][j]) {
+                    if (AscendStorer.columnCompare(potsState, i, j) > 0) {
+                        return false;
+                    } else {
+                        break;
+                    }
+                }
+            }
+        }
+        for (int i = Statix.nbHOSTS(); i < Statix.nbGROUPS() - 1; i++) {
             if (AscendStorer.columnCompare(potsState, i, i + 1) > 0) {
                 return false;
             }
@@ -546,7 +624,7 @@ public final class Node {
     }
 
     private boolean completeValidation() {
-        for (byte gr = 0; gr < Statix.NB_GROUPS; gr++) {
+        for (byte gr = 0; gr < Statix.nbGROUPS(); gr++) {
             if (!completeValidation(gr)) {
                 return false;
             }
@@ -557,39 +635,25 @@ public final class Node {
 
     //Should only be used at final level 32
     private boolean completeValidation(byte gr) {
-        boolean[] used = new boolean[Statix.NB_MONOCONTS];
-        boolean euroExtra = true;
-        for (int i = 0; i < 4; i++) {
-            byte[] conts = Node.getMonoConts(potsState[i][gr]);
-            for (byte cont : conts) {
-                if (used[cont]) {
-                    if (cont == 0 || euroExtra) {
-                        euroExtra = false;
-                    } else {
-                        return false;
-                    }
-                } else {
-                    used[cont] = true;
-                }
-            }
-
-        }
+        //TODO redo completely qwer
         return true;
+
     }
 
+    //Should not be needed, just for debugging
+    //Returns true if the differences between trRemains and Statix.getCopyOfPot
+    //do not match the added continents on actual round.
     public boolean imbalance() {
-        //int trIdx = level/8;
-        //if (trIdx==0)
-        //    return false;
+
         int lastLine = potsState.length - 1;
-        int[] copyOfTr = Arrays.copyOf(trRemains, Statix.NB_CONTS);
-        for (int i = 0; i < Statix.NB_GROUPS; i++) {
+        int[] copyOfTr = Arrays.copyOf(trRemains, Statix.nbCONTS());
+        for (int i = 0; i < Statix.nbGROUPS(); i++) {
             if (potsState[lastLine][i] >= 0) {
                 copyOfTr[potsState[lastLine][i]] += 1;
             }
         }
         int[] initPot = Statix.getCopyOfPot(lastLine);
-        for (int i = 0; i < Statix.NB_CONTS; i++) {
+        for (int i = 0; i < Statix.nbCONTS(); i++) {
             if (initPot[i] != copyOfTr[i]) {
                 return true;
             }

@@ -13,9 +13,9 @@ package central;
  */
 public class ByteArray implements Comparable<ByteArray> {
 
-    byte[] arr;
+    public byte[] arr;
 
-    ByteArray(byte[] arr) {
+    public ByteArray(byte[] arr) {
         this.arr = arr;
     }
 

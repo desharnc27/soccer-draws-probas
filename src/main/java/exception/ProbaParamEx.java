@@ -5,11 +5,17 @@
  */
 package exception;
 
+import central.Misc;
+
 /**
  *
  * @author desharnc27
  */
 public class ProbaParamEx extends Exception {
+
+    public static ProbaParamEx makeAnonymus() {
+        return new ProbaParamEx("");
+    }
 
     public static ProbaParamEx makeEmptyArg(String arg) {
         return new ProbaParamEx(arg + " contains empty parameters");
@@ -24,7 +30,7 @@ public class ProbaParamEx extends Exception {
     }
 
     public static ProbaParamEx makeAmbiguousArg(String arg, String poss1, String poss2) {
-        return new ProbaParamEx(arg + " is ambiguous because it matches at least two values: " + poss1 + " and " + poss2);
+        return new ProbaParamEx(Misc.ambiguousStr(arg, poss1, poss2));
     }
 
     public static ProbaParamEx makeRedundantArg(String arg) {
@@ -32,7 +38,7 @@ public class ProbaParamEx extends Exception {
     }
 
     public static ProbaParamEx makeLackSingleton() {
-        return new ProbaParamEx("Not enough singletons in parameters");
+        return new ProbaParamEx("At least one paramter should be a singleton (no enumeration, no wild card).");
     }
 
 }

@@ -3,8 +3,11 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package central;
+package algocore;
 
+import central.ByteArray;
+import central.Misc;
+import central.Statix;
 import java.util.ArrayList;
 import java.util.Collections;
 import tools.CombMeths;
@@ -16,23 +19,16 @@ import tools.GeneralMeths;
  */
 public class AscendStorer implements Comparable<AscendStorer> {
 
-    static ArrayList<AscendStorer> ascendStorerBank = new ArrayList<AscendStorer>();
-    byte firstLen;
-    byte[][] firsts;
-    ArrayList<ByteArray> doableSubs = new ArrayList<>();
+    private static final ArrayList<AscendStorer> ascendStorerBank = new ArrayList<AscendStorer>();
+    private final byte firstLen;
+    private final byte[][] firsts;
+    private final ArrayList<ByteArray> doableSubs = new ArrayList<>();
 
-    /*public AscendStorer(byte[][] potsState) {
-        firstLen = (byte)(potsState.length);
-        firsts = new byte[firstLen][Statix.NB_GROUPS];
-        for (int i = 0; i < firstLen; i++) {
-            System.arraycopy(potsState[i], 0, firsts[i], 0, Statix.NB_GROUPS);
-        }
-    }*/
     private AscendStorer(byte[][] arr, int arrLen) {
         firstLen = (byte) (arrLen);
-        firsts = new byte[firstLen][Statix.NB_GROUPS];
+        firsts = new byte[firstLen][Statix.nbGROUPS()];
         for (int i = 0; i < firstLen; i++) {
-            System.arraycopy(arr[i], 0, firsts[i], 0, Statix.NB_GROUPS);
+            System.arraycopy(arr[i], 0, firsts[i], 0, Statix.nbGROUPS());
         }
     }
 
@@ -48,6 +44,16 @@ public class AscendStorer implements Comparable<AscendStorer> {
             lenArr--;
         }
         return new AscendStorer(potsState, lenArr);
+    }
+
+    public static int findAndInsert(AscendStorer asSt) {
+        int idx = Collections.binarySearch(AscendStorer.ascendStorerBank, asSt);
+        if (idx < 0) {
+            ascendStorerBank.add(-idx - 1, asSt);
+        } else {
+            System.out.println("Warning: findAndInsert(asSt) found already existing instance.");
+        }
+        return idx;
     }
 
     @Override
@@ -98,7 +104,7 @@ public class AscendStorer implements Comparable<AscendStorer> {
      *
      */
     public static void includePossibleLastPot(byte[] sequence, ArrayList<ByteArray> subsBank) {
-        boolean[] iterArr = new boolean[Statix.NB_GROUPS];
+        boolean[] iterArr = new boolean[Statix.nbGROUPS()];
         do {
             byte[] toInject = new byte[sequence.length];
             for (int i = 0; i < toInject.length; i++) {
@@ -130,26 +136,71 @@ public class AscendStorer implements Comparable<AscendStorer> {
      */
     public static byte[][] getAscendStorerPerm(Node node) {
         byte[][] arr;
-        if (node.potsState[node.potsState.length - 1][0] != -1) {
-            arr = Misc.copyPlusVirginLine(node.potsState);
+        if (!node.hazardeousVirginLineCheck()) {
+            arr = node.copyPSWithPlusVirginLine();
         } else {
-            arr = GeneralMeths.getCopy(node.potsState);
+            arr = node.copyPotsState();
         }
-        for (byte i = 0; i < Statix.NB_GROUPS; i++) {
+        for (byte i = 0; i < Statix.nbGROUPS(); i++) {
             arr[arr.length - 1][i] = i;
         }
-        ascendiumSort(arr);
+        traule(arr);//ascendiumSort(arr); qscg
         return arr;
     }
 
     public static void ascendiumSort(byte[][] arr) {
-        for (int i = 1; i < Statix.NB_GROUPS; i++) {
-            for (int j = i; j < Statix.NB_GROUPS; j++) {
+        for (int i = Statix.nbHOSTS(); i < Statix.nbGROUPS(); i++) {
+            for (int j = i + 1; j < Statix.nbGROUPS(); j++) {
                 if (columnCompare(arr, i, j) > 0) {
                     columnSwap(arr, i, j);
                 }
             }
         }
+    }
+
+    //TODO unusable?
+    public static void ascendiumSort(byte[][] arr, int left, int right) {
+        for (int i = left; i < right; i++) {
+            for (int j = i + 1; j < right; j++) {
+                if (columnCompare(arr, i, j) > 0) {
+                    columnSwap(arr, i, j);
+                }
+            }
+        }
+    }
+
+    //TODO unusable?
+    public static void ascendiumSortTrololo(byte[][] arr) {
+        int lowIdx = 0;
+        int highIdx = 1;
+        byte currentCont0 = arr[0][0];
+        while (highIdx < Statix.nbHOSTS()) {
+            byte nextCont0 = arr[0][highIdx];
+            if (currentCont0 == nextCont0) {
+                highIdx++;
+                continue;
+            }
+            ascendiumSort(arr, lowIdx, highIdx);
+            currentCont0 = nextCont0;
+            lowIdx = highIdx;
+            highIdx++;
+
+        }
+        ascendiumSort(arr, Statix.nbHOSTS(), Statix.nbGROUPS());
+    }
+
+    public static void traule(byte[][] arr) {
+        for (int lowIdx = 0; lowIdx < Statix.nbHOSTS(); lowIdx++) {
+            for (int highIdx = lowIdx + 1; highIdx < Statix.nbGROUPS(); highIdx++) {
+                if (arr[0][lowIdx] != arr[0][highIdx]) {
+                    continue;
+                }
+                if (columnCompare(arr, lowIdx, highIdx) > 0) {
+                    columnSwap(arr, lowIdx, highIdx);
+                }
+            }
+        }
+        ascendiumSort(arr, Statix.nbHOSTS(), Statix.nbGROUPS());
     }
 
     public static void columnSwap(byte[][] arr, int c0, int c1) {
@@ -172,7 +223,7 @@ public class AscendStorer implements Comparable<AscendStorer> {
         return 0;
     }
 
-    static AscendStorer getAscendStorer(byte[][] ascendStorerPerm) {
+    public static AscendStorer getAscendStorer(byte[][] ascendStorerPerm) {
         AscendStorer temp = AscendStorer.buildWithAsp(ascendStorerPerm);
         int idx = Collections.binarySearch(ascendStorerBank, temp);
         if (idx < 0) {
@@ -185,10 +236,9 @@ public class AscendStorer implements Comparable<AscendStorer> {
             }
             Misc.print2D(ascendStorerBank.get(idx).firsts, true);
             System.out.println("---------");
-            printSome(1);
-            System.out.println("---------");
 
-            int debug = 1 / 0;
+            //int crash = 1 / 0;
+            idx = 0;//TODO remove
         }
         return ascendStorerBank.get(idx);
     }
@@ -201,13 +251,12 @@ public class AscendStorer implements Comparable<AscendStorer> {
             return as.isEmpty();
         } catch (Exception e) {
             node.printPotsState();
-            e.printStackTrace();
-            int a = 1 / 0;
+            int crash = 1 / 0;
         }
         return false;
     }
 
     public boolean isEmpty() {
-        return doableSubs.size() == 0;
+        return doableSubs.isEmpty();
     }
 }

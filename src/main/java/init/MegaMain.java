@@ -15,8 +15,6 @@ import exception.ProbaParamEx;
 import java.io.File;
 import java.io.IOException;
 import java.util.Scanner;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import tools.GeneralMeths;
 import tools.RootFinder;
 
@@ -27,71 +25,132 @@ import tools.RootFinder;
 public class MegaMain {
 
     public static final String ROOT_STR = RootFinder.getRootPath();
-    public static boolean useExistentCalculations = false;
 
-    private static String teamsFileName = "initConfig.txt";
-    private static String statsFileStr = "stats";
-    private static String dataFolderName = "data";
-    private static String defaultScenarioName = "default";
-    private static String initParametersFileName = "parameters.txt";
-    private static String calculFileName = "algoData";
+    private final static String DATA_FOLDER_NAME = "data";
+    private final static String DEFAULT_SCENARIO_NAME = "default";
+    private final static String DRAFT_CONFIG = "draft.txt";
+    private final static String STAT_STORAGE_NAME = "algoData";
 
-    public static String dataPath() {
-        return ROOT_STR + File.separator + dataFolderName + File.separator;
+    public static final String EXIT = "exit";
+    public static final String HELP = "help";
+    public static final String DISPLAY_TEAMS = "teams";
+    public static final String MODEL = "example";
+    public static final String HELP_CONFIG = DRAFT_CONFIG;
+    public static final String HELP_PARAMS = "input.txt";
+
+    public static String dataRoot() {
+        return ROOT_STR + File.separator + DATA_FOLDER_NAME + File.separator;
     }
 
     public static String dataPath(String scenario) {
-        return dataPath() + scenario + File.separator;
+        return dataRoot() + scenario + File.separator;
     }
 
-    public static String defaultDataPath() {
-        return dataPath(defaultScenarioName);
+    public static String dataPath() {
+        return dataPath(DEFAULT_SCENARIO_NAME);
     }
 
     public static String paramFile(String scenario) {
-        return dataPath() + scenario + File.separator + initParametersFileName;
+        return dataRoot() + scenario + File.separator + DRAFT_CONFIG;
     }
 
     public static String calculFile(String scenario) {
-        return dataPath() + scenario + File.separator + calculFileName;
+        return dataRoot() + scenario + File.separator + STAT_STORAGE_NAME;
     }
 
     public static String paramFile() {
-        return paramFile(defaultScenarioName);
+        return paramFile(DEFAULT_SCENARIO_NAME);
     }
 
     public static String calculFile() {
-        return calculFile(defaultScenarioName);
+        return calculFile(DEFAULT_SCENARIO_NAME);
     }
 
-    public static String symbNo = "-";
-    public static String guilNo = "\"" + symbNo + "\"";
-    public static String symbWild = "*";
-    public static String guilWild = "\"" + symbWild + "\"";
-    public static String symbOr = "/";
-    public static String guilOr = "\"" + symbOr + "\"";
+    public static String helpFolder() {
+        return ROOT_STR + File.separator + HELP + File.separator;
+    }
+
+    public static String helpParamFile() {
+        return helpFolder() + HELP_PARAMS;
+    }
+
+    public static String helpConfigFile() {
+        return helpFolder() + HELP_CONFIG;
+    }
+
+    public static final String SYMB_NO = "-";
+    public static final String GUIL_NO = Misc.guillemet(SYMB_NO);
+    public static final String SYMB_WILD = "*";
+    public static final String GUIL_WILD = Misc.guillemet(SYMB_WILD);
+    public static final String SYMB_OR = "/";
+    public static final String GUIL_OR = Misc.guillemet(SYMB_OR);
 
     public static String fullName(String filename) {
         return ROOT_STR + File.separator + filename;
     }
 
+    private static void printGlobalOptions() {
+        System.out.println("By the way, you can type " + Misc.guillemet(EXIT) + " to close app.");
+        System.out.println("You can type " + Misc.guillemet(DISPLAY_TEAMS) + " to show the name of all teams.");
+        System.out.println("You can type " + Misc.guillemet(HELP) + " to get some general indications and examples");
+    }
+
     public static void checkExit(String input) {
-        if (input.equals("exit")) {
+        if (input.equals(EXIT)) {
             System.out.println("User asked to close app. Will exit.");
+            if (DebugData.printDebugSums) {
+                DebugData.printCounters();
+            }
             System.exit(0);
         }
     }
 
+    private static boolean checkHelp(String input, boolean helpOnConfigFile) {
+        if (input.equals(HELP)) {
+            if (helpOnConfigFile) {
+                String message = "Open file " + paramFile(MODEL)
+                        + "for an example on how to fill " + DRAFT_CONFIG + " files";
+                System.out.println(message);
+                return true;
+            }
+            String helpFile = helpParamFile();
+            Misc.displayFile(helpFile);
+            return true;
+        }
+        return false;
+    }
+
     private static int chooseOption(Scanner scanner, String[] options) {
+
         while (true) {
+
             System.out.println("Type one of the following options: " + String.join(",", options));
             String input = scanner.next();
             checkExit(input);
+            int chosenIdx = -1;
+
+            //boolean exactMatchFound = false;
             for (int i = 0; i < options.length; i++) {
-                if (input.equals(options[i])) {
-                    return i;
+                if (options[i].startsWith(input)) {
+                    if (input.equals(options[i])) {
+                        return i;
+                    }
+                    if (chosenIdx > 0) {
+                        System.out.print(Misc.ambiguousStr(input, options[chosenIdx], options[i]));
+                        chosenIdx = -2;
+                        break;
+                    }
+                    chosenIdx = i;
                 }
             }
+            if (chosenIdx >= 0) {
+                System.out.println(Misc.inputUnderstoodAs(input, options[chosenIdx]));
+                return chosenIdx;
+            }
+            if (chosenIdx == -1) {
+                System.out.print(Misc.inputUnsolved(input));
+            }
+            System.out.println(" Enter something else.");
         }
 
     }
@@ -115,23 +174,23 @@ public class MegaMain {
         return sumOfAllCases / Statix.commonDenominator();
     }
 
-    public static int guessGroup(String input) {
+    public static int guessGroup(String input) throws ProbaParamEx {
         if (input.length() != 1) {
-            return -2;
+            throw ProbaParamEx.makeBadArg(input);
         }
-        if (input.equals(symbWild)) {
+        if (input.equals(SYMB_WILD)) {
             return -1;
         }
         char group = Misc.decapitalize(input).charAt(0);
-        if (group < 'a' || group >= 'a' + Statix.nbGroups()) {
-            return -2;
+        if (group < 'a' || group >= 'a' + Statix.nbGROUPS()) {
+            throw ProbaParamEx.makeBadArg(input);
         }
         return group - 'a';
 
     }
 
     public static int guessTeam(int round, String input) throws ProbaParamEx {
-        if (input.equals(symbWild)) {
+        if (input.equals(SYMB_WILD)) {
             return -1;
         }
         int gr = Statix.indexValidateByPrefix(round, input);
@@ -140,71 +199,23 @@ public class MegaMain {
 
     public static String askWithDefault(Scanner scanner, String quest, String defaultVal) {
         System.out.print(quest);
-        System.out.println(" [enter " + guilNo + " to choose" + defaultVal + "]");
+        System.out.println(" [enter " + GUIL_NO + " to choose" + defaultVal + "]");
         String res = scanner.next();
-        if (res.equals(symbNo)) {
+        if (res.equals(SYMB_NO)) {
             return defaultVal;
         }
         return res;
     }
 
-    public static void main1() {
-        Scanner scanner = new Scanner(System.in);
-        System.out.println("Welcome!");
-        String filename = askWithDefault(scanner, "What file should the teams be loaded from?", teamsFileName);
-        Loading.load(fullName(filename));
-        System.out.println("Should we calculate from scratch? If yes, enter " + guilNo);
-        System.out.println("Otherwise, enter the name of the file from which data will be imported.");
-        String nameToLoad = scanner.next();
-        if (nameToLoad.equals(symbNo)) {
-            System.out.println("Should calculations be saved in a file for next time?");
-            System.out.println("Type the name of the file you wish to use, or  " + guilNo + " for no save.");
-            filename = scanner.next();
-            //String fullName = filename.length <0 
-            if (filename.equals(symbNo)) {
-                filename = null;
-            }
-            CalculusMain.run(fullName(filename));
+    private static void exactApp(Scanner scanner, String dataName) {
 
-        } else {
-            try {
-                Stats.loadFromFile(nameToLoad);
-            } catch (InitParseException | IOException ex) {
-                System.out.println(ex);
-            }
-        }
-        boolean still = true;
-
-        while (still) {
-            DebugData.cmdCounter = 0;
-            try {
-                still = manageProbaParamCmd(scanner);
-            } catch (ProbaParamEx ex) {
-                System.out.println(ex);
-            }
-            System.out.println("DebugData.cmdCounter: " + DebugData.cmdCounter);
-        }
-
-    }
-
-    public static void main2() {
-        Scanner scanner = new Scanner(System.in);
-        System.out.println("Welcome!");
-        //String dataName = askWithDefault(scanner, "What folder should data be taken from?", defaultScenarioName);
-        System.out.println("What folder should data be taken from?");
-        String[] options = new File(dataPath()).list();
-        int chosenIdx = chooseOption(scanner, options);
-        String dataName = new File(options[chosenIdx]).getName();
-
-        //if (!new File(dataPath(dataName)).exists())
-        Loading.load(paramFile(dataName));
-
+        //data management
         boolean recalculate = true;
         File calculFile = new File(calculFile(dataName));
         if (calculFile.exists()) {
             System.out.print(calculFile.getPath() + " already contains calculation data. Load it or restart calculations from scratch?");
             System.out.println("Load it or restart calculations from scratch?");
-            options = new String[]{"load", "restart"};
+            String[] options = new String[]{"load", "restart"};
             int opt = chooseOption(scanner, options);
             if (opt == 0) {
                 recalculate = false;
@@ -231,63 +242,84 @@ public class MegaMain {
         if (recalculate) {
             CalculusMain.run(calculFile.getPath());
         }
-
-        /*System.out.println("Should we calculate from scratch? If yes, enter " + guilNo);
-        System.out.println("Otherwise, enter the name of the file from which data will be imported.");
-        String nameToLoad = scanner.next();
-        if (nameToLoad.equals(symbNo)) {
-            System.out.println("Should calculations be saved in a file for next time?");
-            System.out.println("Type the name of the file you wish to use, or  " + guilNo + " for no save.");
-            filename = scanner.next();
-            //String fullName = filename.length <0 
-            if (filename.equals(symbNo)) {
-                filename = null;
-            }
-            CalculusMain.run(fullName(filename));
-
-        } else {
-            Stats.loadFromFile(nameToLoad);
-        }*/
         boolean still = true;
-
+        byte consecutiveMistakes = 0;
         while (still) {
             DebugData.cmdCounter = 0;
             try {
                 still = manageProbaParamCmd(scanner);
+                consecutiveMistakes = 0;
             } catch (ProbaParamEx ex) {
-                System.out.println(ex);
+                System.out.println(ex.getMessage());
+                consecutiveMistakes++;
+                if (consecutiveMistakes > 2) {
+                    printGlobalOptions();
+                }
             }
             System.out.println("DebugData.cmdCounter: " + DebugData.cmdCounter);
         }
-
     }
 
-    public static boolean manageProbaParamCmd(Scanner scanner) throws ProbaParamEx {
+    private static void simulApp(Scanner scanner, String dataName) {
+        CalculusMain.buildAscendStorage();
+        Simulating.simulateOne((byte) 2);
+    }
+
+    private static void mainRun() {
+
+        //Welcome
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("Welcome!");
+        //String dataName = askWithDefault(scanner, "What folder should data be taken from?", DEFAULT_SCENARIO_NAME);
+        System.out.println("What folder should data be taken from?");
+        String[] options = new File(dataRoot()).list();
+        int chosenIdx = chooseOption(scanner, options);
+        String dataName = new File(options[chosenIdx]).getName();
+        Loading.load(paramFile(dataName));
+        DebugData.initialize();
+        //
+        System.out.println("You want to explore exact probabilities or use a simulator?");
+        options = new String[]{"exact", "simulator"};
+        chosenIdx = chooseOption(scanner, options);
+        if (chosenIdx == 0) {
+            exactApp(scanner, dataName);
+        } else {
+            simulApp(scanner, dataName);
+        }
+    }
+
+    private static boolean manageProbaParamCmd(Scanner scanner) throws ProbaParamEx {
         System.out.println("What probability would you like to calculate?");
         String input = scanner.next();
         MegaMain.checkExit(input);
+        if (MegaMain.checkHelp(input, false)) {
+            return true;
+        }
+        if (MegaMain.checkTeamDisplay(input)) {
+            return true;
+        }
         String[] args = input.split(",");
         if (args.length != 5) {
             System.out.println("Your command should have 5 parameters separated by 4 commas: ");
             System.out.println("group,pot1team,pot2team,pot3team,pot4team");
-            System.out.print("If desired, use " + guilWild + " as wild cards");
-            System.out.println(" and " + guilWild + " to enumerate groups letters or teams");
-            return true;
+            System.out.print("If desired, use " + GUIL_WILD + " as wild cards");
+            System.out.println(" and " + GUIL_OR + " to enumerate groups letters or teams");
+            throw ProbaParamEx.makeAnonymus();
         }
         int nbOfSingletons = 0;
 
-        int nbGroups = Statix.nbGroups();
+        int nbGroups = Statix.nbGROUPS();
 
         int[][] reqs = new int[5][];
         for (int i = 0; i < 5; i++) {
             if (args[i].length() == 0) {
                 throw ProbaParamEx.makeEmptyArg(input);
             }
-            if (args[i].equals(symbWild)) {
+            if (args[i].equals(SYMB_WILD)) {
                 reqs[i] = GeneralMeths.idPermArray(nbGroups);
                 continue;
             }
-            String[] enumer = args[i].split(MegaMain.symbOr);
+            String[] enumer = args[i].split(MegaMain.SYMB_OR);
             reqs[i] = new int[enumer.length];
             if (reqs[i].length == 1) {
                 nbOfSingletons++;
@@ -325,7 +357,27 @@ public class MegaMain {
     }
 
     public static void main(String[] args) {
-        main2();
+
+        mainRun();
+    }
+
+    private static boolean checkTeamDisplay(String input) {
+        if (input.equals(MegaMain.DISPLAY_TEAMS)) {
+            displayTeams();
+            return true;
+        }
+        return false;
+    }
+
+    private static void displayTeams() {
+        for (int i = 0; i < 4; i++) {
+            System.out.print("Pot " + (i + 1) + ": ");
+            String[] enu = new String[Statix.nbGROUPS()];
+            for (int j = 0; j < enu.length; j++) {
+                enu[j] = Statix.getTeam(i, j).name();
+            }
+            System.out.println(String.join(",", enu));
+        }
     }
 
 }
