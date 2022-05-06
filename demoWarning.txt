@@ -1,0 +1,6 @@
+Important note: this is only a demo version, which has very limited features.
+The only path of options available is: [any data folder] -> exact -> load. Consequently:
+- You can't choose "simulator" instead of "exact"
+- You can't choose "restart" instead of "load"
+Otherwise the program will experience a failure and close. 
+Concretely, the purpose of this is to give you access to the qatar2022 probabilities , but not to the algorithm behind these probabilities.
