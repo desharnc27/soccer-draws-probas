@@ -29,7 +29,7 @@ public class MegaMain {
     private final static String DATA_FOLDER_NAME = "data";
     private final static String DEFAULT_SCENARIO_NAME = "default";
     private final static String DRAFT_CONFIG = "draft.txt";
-    private final static String STAT_STORAGE_NAME = "algoData";
+    private final static String STAT_STORAGE_NAME = "algoData";    
 
     public static final String EXIT = "exit";
     public static final String HELP = "help";
@@ -37,6 +37,7 @@ public class MegaMain {
     public static final String MODEL = "example";
     public static final String HELP_CONFIG = DRAFT_CONFIG;
     public static final String HELP_PARAMS = "input.txt";
+    public static final String DEMO_WARNING = "demoWarning.txt";
 
     public static String dataRoot() {
         return ROOT_STR + File.separator + DATA_FOLDER_NAME + File.separator;
@@ -213,7 +214,7 @@ public class MegaMain {
         boolean recalculate = true;
         File calculFile = new File(calculFile(dataName));
         if (calculFile.exists()) {
-            System.out.print(calculFile.getPath() + " already contains calculation data. Load it or restart calculations from scratch?");
+            System.out.print(calculFile.getPath() + " already contains calculation data. ");
             System.out.println("Load it or restart calculations from scratch?");
             String[] options = new String[]{"load", "restart"};
             int opt = chooseOption(scanner, options);
@@ -256,36 +257,13 @@ public class MegaMain {
                     printGlobalOptions();
                 }
             }
-            System.out.println("DebugData.cmdCounter: " + DebugData.cmdCounter);
+            //System.out.println("DebugData.cmdCounter: " + DebugData.cmdCounter);
         }
     }
 
     private static void simulApp(Scanner scanner, String dataName) {
         CalculusMain.buildAscendStorage();
         Simulating.simulateOne((byte) 2);
-    }
-
-    private static void mainRun() {
-
-        //Welcome
-        Scanner scanner = new Scanner(System.in);
-        System.out.println("Welcome!");
-        //String dataName = askWithDefault(scanner, "What folder should data be taken from?", DEFAULT_SCENARIO_NAME);
-        System.out.println("What folder should data be taken from?");
-        String[] options = new File(dataRoot()).list();
-        int chosenIdx = chooseOption(scanner, options);
-        String dataName = new File(options[chosenIdx]).getName();
-        Loading.load(paramFile(dataName));
-        DebugData.initialize();
-        //
-        System.out.println("You want to explore exact probabilities or use a simulator?");
-        options = new String[]{"exact", "simulator"};
-        chosenIdx = chooseOption(scanner, options);
-        if (chosenIdx == 0) {
-            exactApp(scanner, dataName);
-        } else {
-            simulApp(scanner, dataName);
-        }
     }
 
     private static boolean manageProbaParamCmd(Scanner scanner) throws ProbaParamEx {
@@ -356,11 +334,6 @@ public class MegaMain {
         return true;
     }
 
-    public static void main(String[] args) {
-
-        mainRun();
-    }
-
     private static boolean checkTeamDisplay(String input) {
         if (input.equals(MegaMain.DISPLAY_TEAMS)) {
             displayTeams();
@@ -379,5 +352,37 @@ public class MegaMain {
             System.out.println(String.join(",", enu));
         }
     }
+
+    private static void mainRun() {
+
+        //Welcome
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("Welcome!");
+        //String dataName = askWithDefault(scanner, "What folder should data be taken from?", DEFAULT_SCENARIO_NAME);
+        System.out.println("What folder should data be taken from?");
+        String[] options = new File(dataRoot()).list();
+        int chosenIdx = chooseOption(scanner, options);
+        String dataName = new File(options[chosenIdx]).getName();
+        Loading.load(paramFile(dataName));
+        if (!MegaMain.RESTRICTED_VERSION)            
+            DebugData.initialize();
+        //
+        System.out.println("You want to explore exact probabilities or use a simulator?");
+        options = new String[]{"exact", "simulator"};
+        chosenIdx = chooseOption(scanner, options);
+        if (chosenIdx == 0) {
+            exactApp(scanner, dataName);
+        } else {
+            simulApp(scanner, dataName);
+        }
+    }
+
+    public static void main(String[] args) {
+        if (RESTRICTED_VERSION)
+            Misc.displayFile(DEMO_WARNING);
+        mainRun();
+    }
+    
+    final static boolean RESTRICTED_VERSION = false;
 
 }
