@@ -5,6 +5,10 @@
  */
 package garbage;
 
+import static algocore.AscendStorer.columnCompare;
+import static algocore.AscendStorer.columnSwap;
+import central.Statix;
+
 /**
  *
  * @author desharnc27
@@ -14,6 +18,49 @@ public class GarbageCode {
     //From Node
     /*
     //xbegin
+    
+    public Node() {
+        level = parent.level + 1;
+        int round = level / Statix.nbGROUPS();
+
+        int inTrLevel = level % Statix.nbGROUPS();
+
+        if (inTrLevel == 0) {
+            if (round < 4) {
+                trRemains = Statix.getCopyOfPot(round);
+                potsState = new byte[round + 1][Statix.nbGROUPS()];
+                for (int i = 0; i < round; i++) {
+                    System.arraycopy(parent.potsState[i], 0, potsState[i], 0, Statix.nbGROUPS());
+                }
+                for (int i = 0; i < Statix.nbGROUPS(); i++) {
+                    potsState[round][i] = -1;
+                }
+                potsState[round - 1][group] = cont;
+            } else {
+                trRemains = new int[0];
+                potsState = GeneralMeths.getCopy(parent.potsState);
+                potsState[round - 1][group] = cont;
+            }
+
+        } else {
+
+            potsState = GeneralMeths.getCopy(parent.potsState);
+            potsState[round][group] = cont;
+
+            trRemains = Arrays.copyOf(parent.trRemains, parent.trRemains.length);
+            trRemains[cont]--;
+        }
+        if (round == 4) {
+
+            boolean ok = completeValidation();
+            if (!ok) {
+                printPotsState();
+                int debug = 1;
+            }
+
+        }
+    }
+    
     boolean twado(byte teamAdd, byte groupAdd) {
         //ArrayList<Byte> noException = new ArrayList<>();
         boolean[] isException = new boolean[Statix.NB_CONTS];
@@ -478,6 +525,19 @@ public class GarbageCode {
         int isomorphisms = Statix.getContCount(pot0, cont0) * Statix.getContCount(pot1, cont1);
         return res / isomorphisms;
     }
+
+    //From AscendStorer
+    
+    public static void ascendiumSort(byte[][] arr) {
+        for (int i = Statix.nbHOSTS(); i < Statix.nbGROUPS(); i++) {
+            for (int j = i + 1; j < Statix.nbGROUPS(); j++) {
+                if (columnCompare(arr, i, j) > 0) {
+                    columnSwap(arr, i, j);
+                }
+            }
+        }
+    }
+
     //xend
      */
 }

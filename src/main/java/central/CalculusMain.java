@@ -31,38 +31,36 @@ public class CalculusMain {
         nodeList.clear();
     }
 
-    public static void main1() {
-        buildAscendStorage();
+    public static void buildExactStats(StatFida stats) {
+        //buildAscendStorage();
         Node root = new Node();
-        root.bigExpand();
-
-        Stats.print();
-        DebugData.printCounters();
-        Stats.printPairs();
+        long t0 = System.currentTimeMillis();
+        root.bigExpand(stats);
+        long t1 = System.currentTimeMillis();
+        System.out.println("Total time: " + (t1 - t0 + 0.0) / 1000);
 
     }
 
     public static void buildAscendStorage() {
-        //Node qatarNode = new Node(0f);
+        //MAke sure it's not already built
+        if (AscendStorer.detectBuild()) {
+            return;
+        }
         Node initNode = Node.postHostsNode();
         initNode.buildAscendStorageLayers();
         AscendStorer.printSome(1);
+        //AscendStorer.printDetailedSome(100000);
     }
 
-    public static void main(String[] args) {
-        run(MegaMain.ROOT_STR + File.separator + "tempSavior");
+    /*public static void run(StatFida stats,String filename) {
 
-    }
-
-    public static void run(String filename) {
-
-        long t0 = System.currentTimeMillis();
-        main1();
-        long t1 = System.currentTimeMillis();
-        Stats.StoreInfile(filename);
+        //long t0 = System.currentTimeMillis();
+        buildExactStats( stats);
+        //long t1 = System.currentTimeMillis();
+        stats.StoreInfile(filename);
         //AscendStorer.printDetailedSome(100000);
         //AscendStorer.printSome(1);
-        System.out.println("Total time: " + (t1 - t0 + 0.0) / 1000);
-    }
-
+        DebugData.printCounters();
+        
+    }*/
 }

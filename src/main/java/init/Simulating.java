@@ -7,7 +7,15 @@ package init;
 
 import algocore.AscendStorer;
 import algocore.Node;
+import central.CalculusMain;
+import central.Misc;
+import central.StatByTeams;
+import central.StatFida;
 import central.Statix;
+import exception.ProbaParamEx;
+import java.util.ArrayList;
+import scanlol.Flower;
+import scanlol.PresetScanner;
 import tools.GeneralMeths;
 
 /**
@@ -45,6 +53,260 @@ public class Simulating {
         }
     }
 
+    public static void interactiveLoop(Flower scanner) {
+        StatFida stats;
+        while ((stats = interactiveSim(scanner)) == null) {
+            //Nothing to do other than the condition fct itself;
+        }
+        if (stats != null) {
+            if (stats instanceof StatByTeams) {
+                System.out.printf("Remark: using %s does not allow saving calculations\n", MegaMain.SIMUL_HARD);
+            } else {
+                String question = "How would you name your simulation? (type a single character to avoid saving)";
+                String qrRequest = scanner.questionStr(question, "[\\w]*");
+                if (qrRequest.length() > 1) {
+                    String filename = MegaMain.customFile(Statix.getDataName(), qrRequest);
+                    stats.StoreDankInfile(filename);
+                }
+            }
+        }
+        MegaMain.probaQuast(scanner, stats);
+    }
+
+    /**
+     * Interactive sim
+     *
+     * @param scanner
+     * @return true if user wants to do another simulation, false otherwise
+     */
+    public static StatFida interactiveSim(Flower scanner) {
+        int NB_TEAMS = 4 * Statix.nbGROUPS();
+        Node actua = new Node();
+        ArrayList<Team> teams = new ArrayList<>();
+        ArrayList<Byte> groupOrder = new ArrayList<>();
+        ArrayList<Byte> teamBdOrder = new ArrayList<>();
+        boolean[][] teamDrafted = new boolean[4][Statix.nbGROUPS()];
+        for (int i = 0; i < Statix.nbHOSTS(); i++) {
+            Simulating.forward(scanner, actua, i, teamDrafted, teamBdOrder, teams, groupOrder);
+        }
+        while (true) {
+            String[] options = new String[]{"undo*", "current", "next*", "exactFromHere",
+                MegaMain.SIMUL_AVG + "*", MegaMain.SIMUL_HARD + "*"};
+            String[] understood = MegaMain.crazyChooseOption(scanner, options);
+            StatFida stats;
+            switch (understood[0]) {
+                case "undo":
+                    if (teams.size() <= Statix.nbHOSTS()) {
+                        System.out.println("Nothing to undo.");
+                        break;
+                    }
+                    int userNumber;
+                    try {
+                        userNumber = Integer.parseInt(understood[1]);
+                    } catch (NumberFormatException e) {
+                        userNumber = -1;
+                    } catch (ArrayIndexOutOfBoundsException e) {
+                        userNumber = 1;
+                    }
+                    if (userNumber <= 0) {
+                        System.out.println(understood[1] + " is a wrong parameter for " + understood[0]);
+                        break;
+                    }
+                    if (userNumber > teams.size() - Statix.nbHOSTS()) {
+                        userNumber = teams.size() - Statix.nbHOSTS();
+                    }
+                    for (int i = 0; i < userNumber; i++) {
+                        Simulating.backward(scanner, actua, teamDrafted, teamBdOrder, teams, groupOrder);
+                    }
+                    break;
+
+                case "next":
+                    if (teams.size() == Statix.nbGROUPS() * 4) {
+                        System.out.println("Draft already completed.");
+                        break;
+                    }
+                    String teamPrefix = null;
+                    try {
+                        userNumber = Integer.parseInt(understood[1]);
+                    } catch (NumberFormatException e) {
+                        userNumber = 1;
+                        teamPrefix = understood[1];
+                    } catch (ArrayIndexOutOfBoundsException e) {
+                        userNumber = 1;
+                    }
+                    int teamIdx = -1;
+                    if (teamPrefix != null) {
+                        try {
+                            int round = teams.size() / Statix.nbGROUPS();
+                            teamIdx = MegaMain.guessTeam(round, teamPrefix);
+                            if (teamDrafted[round][teamIdx]) {
+                                System.out.println(Statix.getTeam(round, teamIdx) + " is already drafted.");
+                                break;
+                            }
+
+                        } catch (ProbaParamEx ex) {
+                            System.out.println(ex.getMessage());
+                            break;
+                        }
+
+                    } else if (userNumber <= 0) {
+                        System.out.println(understood[1] + " is a wrong parameter for " + understood[0]);
+                        break;
+                    }
+                    if (userNumber > NB_TEAMS - teams.size()) {
+                        userNumber = NB_TEAMS - teams.size();
+                    }
+                    for (int i = 0; i < userNumber; i++) {
+                        Simulating.forward(scanner, actua, teamIdx, teamDrafted, teamBdOrder, teams, groupOrder);
+                        teamIdx = -1;//reset team index fot next iter
+                    }
+                    break;
+                case "current":
+                    Simulating.printCurrentDraft(teams, groupOrder);
+                    break;
+
+                case MegaMain.SIMUL_AVG:
+                    //stats = StatFida.createAndGet(MegaMain.SIMUL_AVG);
+                    stats = new StatFida();
+                    int sampleSize;
+                    try {
+                        sampleSize = Integer.parseInt(understood[1]);
+                    } catch (NumberFormatException e) {
+                        System.out.println("stize" + "can't be without extra argument (size of sample).");
+                        break;
+                    } catch (ArrayIndexOutOfBoundsException e) {
+                        System.out.println("extra argument must be a number (size of sample).");
+                        break;
+                    }
+                    expandBySample(stats, sampleSize, actua, teamDrafted, teamBdOrder, teams, groupOrder);
+                    return stats;
+                case MegaMain.SIMUL_HARD:
+                    //stats = StatFida.createAndGet(MegaMain.SIMUL_HARD);
+                    stats = new StatByTeams();
+                    try {
+                        sampleSize = Integer.parseInt(understood[1]);
+                    } catch (NumberFormatException e) {
+                        System.out.println("stize" + "can't be without extra argument (size of sample).");
+                        break;
+                    } catch (ArrayIndexOutOfBoundsException e) {
+                        System.out.println("extra argument must be a number (size of sample).");
+                        break;
+                    }
+                    expandBySample(stats, sampleSize, actua, teamDrafted, teamBdOrder, teams, groupOrder);
+                    return stats;
+                case "exactFromHere":
+                    //stats = StatFida.createAndGet(MegaMain.EXACT_FROM_SOME);
+                    stats = new StatFida();
+                    stats.setForcedTeams(teamBdOrder, groupOrder);
+                    CalculusMain.buildExactStats(stats);
+                    return stats;
+                //case "terminate":
+                //    return false;
+            }
+        }
+
+    }
+
+    private static void expandBySample(StatFida stats, int sampleSize, Node actua, boolean[][] teamDrafted,
+            ArrayList<Byte> teamBdOrder, ArrayList<Team> teams, ArrayList<Byte> groupOrder) {
+
+        for (int i = 0; i < sampleSize; i++) {
+            PresetScanner pss = new PresetScanner();//just to avoid printings, useless otherwise
+
+            int depth = 4 * Statix.nbGROUPS() - teams.size();
+            for (int j = 0; j < depth; j++) {
+                Simulating.forward(pss, actua, -1, teamDrafted, teamBdOrder, teams, groupOrder);
+            }
+            Simulating.printCurrentDraft(teams, groupOrder);
+            System.out.println("");
+            Misc.print2D(actua.copyPotsState());
+            if (!(stats instanceof StatByTeams)) {
+                stats.feed(actua.copyPotsState(), 1);
+            } else {
+                stats.feed(teamBdOrder, groupOrder);
+            }
+            for (int j = 0; j < depth; j++) {
+                Simulating.backward(pss, actua, teamDrafted, teamBdOrder, teams, groupOrder);
+            }
+        }
+        System.out.println("StatFida.simulStats().getGlobalCount(): " + stats.getGlobalCount());
+    }
+
+    private static void printCurrentDraft(ArrayList<Team> teams, ArrayList<Byte> groupOrder) {
+        int width = 6;
+        String[][] names = new String[4][Statix.nbGROUPS()];
+        for (int i = 0; i < 4; i++) {
+            for (int j = 0; j < names[0].length; j++) {
+                names[i][j] = "-";
+            }
+        }
+        for (int i = 0; i < teams.size(); i++) {
+            Team team = teams.get(i);
+            byte group = groupOrder.get(i);
+            int round = i / Statix.nbGROUPS();
+            String name = team.name();
+            names[round][group] = name;
+        }
+        for (int i = 0; i < 4; i++) {
+            for (int j = 0; j < names[0].length; j++) {
+                names[i][j] = Misc.pad(names[i][j], width, ' ');
+            }
+        }
+        for (int i = 0; i < 4; i++) {
+            System.out.println(String.join(" | ", names[i]));
+        }
+    }
+
+    private static void backward(Flower scanner, Node node, boolean[][] teamDrafted,
+            ArrayList<Byte> teamBdOrder, ArrayList<Team> teams, ArrayList<Byte> groupOrder) {
+        byte group = Misc.removeLast(groupOrder);
+        Team team = Misc.removeLast(teams);
+        char groupLetter = Statix.groupLetter(group);
+        byte teamIdx = Misc.removeLast(teamBdOrder);
+        node.backward(team.cont(), group);
+        int round = node.getRound();
+        teamDrafted[round][teamIdx] = false;
+        ScanMeths.printlnIfScan(scanner, "Draft of " + team.name() + " in group " + groupLetter + " was cancelled.");
+
+    }
+
+    private static void forward(Flower scanner, Node node, int teamIdx, boolean[][] teamDrafted,
+            ArrayList<Byte> teamBdOrder, ArrayList<Team> teams, ArrayList<Byte> groupOrder) {
+        int level = node.getLevel();
+        int round = node.getRound();
+
+        if (teamIdx < 0) {
+            if (level < Statix.nbHOSTS()) {
+                teamIdx = level;
+            } else {
+                //int nbPoss =  Statix.nbGROUPS() - (previous.getLevel() - 4 * round);
+                teamIdx = randomTeamIdx(teamDrafted[round]);
+            }
+        }
+
+        AscendStorer asSt = null;
+        byte[][] asp = null;
+        byte[] perm = null;
+        if (round > 0) {
+            asp = AscendStorer.getAscendStorerPerm(node);
+            asSt = AscendStorer.getAscendStorer(asp);
+            perm = asp[asp.length - 1];
+        }
+
+        Team team = Statix.getTeam(round, teamIdx);
+        byte cont = team.cont();
+        byte group = node.leftMostPlace(cont, asSt, perm);
+        node.forward(cont, group);
+        char groupLetter = Statix.groupLetter(group);
+
+        groupOrder.add(group);
+        teams.add(team);
+        teamBdOrder.add((byte) teamIdx);
+        teamDrafted[round][teamIdx] = true;
+
+        ScanMeths.printlnIfScan(scanner, team.name() + " was drafted to group " + groupLetter + ".");
+    }
+
     public static int[][] getRandomDrawOrder() {
         int ngr = Statix.nbGROUPS();
         int nbh = Statix.nbHOSTS();
@@ -66,7 +328,24 @@ public class Simulating {
 
     }
 
-    public static void simulate(int n) {
+    public static int randomTeamIdx(boolean[] taken) {
 
+        int nbChoices = 0;
+        for (boolean bool : taken) {
+            if (!bool) {
+                nbChoices++;
+            }
+        }
+        int remaining = (int) (Math.random() * nbChoices);
+        for (int idx = 0; idx < taken.length; idx++) {
+            if (!taken[idx]) {
+                if (remaining == 0) {
+                    return idx;
+                }
+                remaining--;
+            }
+        }
+        //Should not be reached
+        return -1;
     }
 }

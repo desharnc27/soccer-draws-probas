@@ -3,12 +3,20 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package init;
+package scanlol;
 
 /**
  *
  * @author desharnc27
+ *
  */
-public class SimulatedConfig {
+public interface Flower {
 
+    public boolean hasNext();
+
+    public String next();
+
+    public String questionStr(String questionStr);
+
+    public String questionStr(String questionStr, String regex);
 }

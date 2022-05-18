@@ -13,7 +13,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Scanner;
 
 /**
  *
@@ -158,18 +160,6 @@ public class Misc {
         return res;
     }
 
-    /*public static byte[] longToBytes(long x) {
-        ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
-        buffer.putLong(x);
-        return buffer.array();
-    }
-
-    public static long bytesToLong(byte[] bytes) {
-        ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
-        buffer.put(bytes);
-        buffer.flip();//need flip 
-        return buffer.getLong();
-    }*/
     public static byte[] longToBytes(long l) {
         byte[] result = new byte[Long.BYTES];
         for (int i = Long.BYTES - 1; i >= 0; i--) {
@@ -189,7 +179,7 @@ public class Misc {
     }
 
     public static long fact(int n) {
-        if (n == 0) {
+        if (n <= 0) {
             return 1;
         }
         return fact(n - 1) * n;
@@ -236,7 +226,7 @@ public class Misc {
         return true;
     }
 
-    public static String guillemet(String s) {
+    public static String guillemets(String s) {
         return "\"" + s + "\"";
     }
 
@@ -265,4 +255,69 @@ public class Misc {
     public static String inputUnsolved(String input) {
         return ("Input " + input + " not understood.");
     }
+    //New 
+
+    public static <T> T removeLast(List<T> list) {
+        return list.remove(list.size() - 1);
+    }
+
+    public static <T> T getLast(List<T> list) {
+        return list.get(list.size() - 1);
+    }
+
+    public static int digitVal(char digit) {
+        if (digit >= '0' || digit <= '9') {
+            return -1;
+        }
+        return digit - '0';
+    }
+
+    public static String pad(String s, int len, char defChar) {
+        if (s.length() >= len) {
+            return s.substring(0, len);
+        }
+        char[] arr = new char[len];
+        for (int i = 0; i < s.length(); i++) {
+            arr[i] = s.charAt(i);
+        }
+        for (int i = s.length(); i < len; i++) {
+            arr[i] = defChar;
+        }
+        return new String(arr);
+
+    }
+
+    public static Object getIntValAt(Object maybeArr, int[] indexes) {
+        return getValAt(maybeArr, indexes, 0);
+    }
+
+    public static Object getValAt(Object maybeArr, int[] indexes) {
+        return getValAt(maybeArr, indexes, 0);
+    }
+
+    public static Object getValAt(Object maybeArr, int[] indexes, int currentIdx) {
+        if (maybeArr.getClass().isArray()) {
+            try {
+                Object[] conv = (Object[]) maybeArr;
+                return getValAt(conv[indexes[currentIdx]], indexes, currentIdx + 1);
+            } catch (ClassCastException e) {
+            }
+            try {
+                int[] conv = (int[]) maybeArr;
+                return conv[indexes[currentIdx]];
+            } catch (ClassCastException e) {
+            }
+            try {
+                long[] conv = (long[]) maybeArr;
+                return conv[indexes[currentIdx]];
+            } catch (ClassCastException e) {
+            }
+        }
+        return maybeArr;
+    }
+
+    public static boolean closeEnough(double v0, double v1) {
+        return (Math.abs(v0 - v1) < 1.0 / (1 << 24));
+    }
+
 }

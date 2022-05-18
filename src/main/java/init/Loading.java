@@ -70,7 +70,7 @@ public class Loading {
 
     }
 
-    public static void load(String filename) {
+    public static void load(String dataName, String filename) {
 
         Path path = Paths.get(filename);
         List<String> lines = null;
@@ -273,7 +273,7 @@ public class Loading {
             hostList.add(teams[0][i].cont);
         }
 
-        Statix.setStatix(GeneralMeths.getCopy(potsByCont), nbGroups, nbMonoConts, hostList, hybrids);
+        Statix.setStatix(dataName, GeneralMeths.getCopy(potsByCont), nbGroups, nbMonoConts, hostList, hybrids);
 
         System.out.println("Initial data parsing was succesful!");
         System.out.println(Statix.allTeamsToString(true));

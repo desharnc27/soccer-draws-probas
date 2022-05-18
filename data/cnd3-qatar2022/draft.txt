@@ -1,0 +1,58 @@
+// Note: lines that begin with // are not parsed, just comments. Lines of less than 2 characters are also ignored.
+
+//This draft initial state is the one if had won its last international match (and therfore had been able to steal Tunisia's place in pot 3)
+
+Number of pots,4
+Number of groups,8
+Number of mono-continents,5
+Hybrid continents,1-4
+Number of hosts,1
+
+Mono-continents minima,1,0,0,0,0
+Mono-continents maxima,2,1,1,1,1
+
+//Put the teams in pot order (the nbGroups first teams will be in first pot, then the next nbGroups teams will be in second pot, etc)
+//They must all be followed by their continent id (seperated by comma)
+//To choose which team(s) is(are) host(s), place it(them) first. Hosts are always in pot 1
+
+//Pot1
+Qatar,4
+Brasil,1
+Belgium,0
+France,0
+Argentina,1
+England,0
+Spain,0
+Portugal,0
+
+//Pot2
+Mexico,2
+Netherlands,0
+Denmark,0
+Germany,0
+Uruguay,1
+Swiss,0
+United States,2
+Croatia,0
+
+//Pot3
+Iran,4
+Japan,4
+Morocco,3
+Poland,0
+Senegal,3
+Serbia,0
+South Korea,4
+Canada,2
+
+
+//Pot4
+Cameroon,3
+Tunisia,3
+Ecuador,1
+Ghana,3
+Saudi Arabia,4
+Ukraine OR Scotland OR Wales,0
+Peru OR Australia OR UAE,5
+Costa Rica OR New Zealand,2
+

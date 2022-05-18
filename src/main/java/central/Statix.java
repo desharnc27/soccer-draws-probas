@@ -19,6 +19,7 @@ public class Statix {
 
     public static final StateComparator scmp = new StateComparator();
 
+    private static String dataName = null;
     private static byte NB_MONOCONTS = 5;
     private static byte NB_CONTS = 6;
     private static byte NB_GROUPS = 8;
@@ -35,7 +36,7 @@ public class Statix {
     public static final int NB_ANALYZED_ROUNDS = 4;
     public static final int ALGO_ASCEND_SWITCH = 1;//Sould always be 1 unless Node.iscompletable() code gets positively changed.
 
-    public static void setStatix(int[][] potsByCont, int nbGroups, int nbMonoConts,
+    public static void setStatix(String name, int[][] potsByCont, int nbGroups, int nbMonoConts,
             ArrayList<Byte> initConstDraws, ArrayList<ArrayList<Byte>> hybrids) {
         pots = GeneralMeths.getCopy(potsByCont);
         NB_GROUPS = (byte) nbGroups;
@@ -43,6 +44,11 @@ public class Statix {
         NB_MONOCONTS = (byte) nbMonoConts;
         Statix.initConstDraws = initConstDraws;
         Statix.hybrids = hybrids;
+        dataName = name;
+    }
+
+    public static String getDataName() {
+        return dataName;
     }
 
     public static int[] getCopyOfPot(int pot) {
@@ -162,41 +168,8 @@ public class Statix {
         teams = arr;
     }
 
-    public static double getProba(int gr, int[] teamQuatuorArr) {
-        //byte [] conts = new byte[teamQuatuor.length];
-        Team[] teamQuatuor = new Team[4];
-        for (int i = 0; i < 4; i++) {
-            teamQuatuor[i] = Statix.getTeam(i, teamQuatuorArr[i]);
-        }
-        long denomAcc = 1;
-        for (int i = 0; i < 4; i++) {
-            if (i != 0) {
-                denomAcc *= Statix.getContCount((byte) i, teamQuatuor[i].cont());
-            } else {
-                if (teamQuatuorArr[i] < nbHOSTS()) {
-                    //Host case
-                    if (teamQuatuorArr[i] != gr) {
-                        return 0;
-                    }
-                    // else certaincy so no change
-                } else {
-                    int divisor = Statix.getContCount((byte) i, teamQuatuor[i].cont());
-                    for (int j = 0; j < initConstDraws.size(); j++) {
-                        if (initConstDraws.get(j) == teamQuatuor[i].cont()) {
-                            divisor--;
-                        }
-
-                    }
-                    denomAcc *= divisor;
-                }
-
-            }
-        }
-        byte[] conts = new byte[4];
-        for (int i = 0; i < 4; i++) {
-            conts[i] = teamQuatuor[i].cont();
-        }
-        return Stats.getSpecificProbLong(gr, conts) / denomAcc + 0.0;
+    public static char groupLetter(int gr) {
+        return (char) ('A' + gr);
     }
 
 }

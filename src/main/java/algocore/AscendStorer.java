@@ -11,7 +11,6 @@ import central.Statix;
 import java.util.ArrayList;
 import java.util.Collections;
 import tools.CombMeths;
-import tools.GeneralMeths;
 
 /**
  *
@@ -20,9 +19,10 @@ import tools.GeneralMeths;
 public class AscendStorer implements Comparable<AscendStorer> {
 
     private static final ArrayList<AscendStorer> ascendStorerBank = new ArrayList<AscendStorer>();
+
     private final byte firstLen;
     private final byte[][] firsts;
-    private final ArrayList<ByteArray> doableSubs = new ArrayList<>();
+    AStNode outcomes = new AStNode((byte) 0);
 
     private AscendStorer(byte[][] arr, int arrLen) {
         firstLen = (byte) (arrLen);
@@ -66,20 +66,30 @@ public class AscendStorer implements Comparable<AscendStorer> {
     }
 
     void injectParts(byte[] b) {
-        includePossibleLastPot(b, doableSubs);
+        includePossibleLastPot(b);
     }
 
     public void print() {
         Misc.print2D(firsts, true);
-        for (int i = 0; i < doableSubs.size(); i++) {
+        /*for (int i = 0; i < doableSubs.size(); i++) {
             System.out.print("   ");
             Misc.println(doableSubs.get(i).arr, true);
+        }*/
+        ArrayList<ByteArray> outcomesStr = new ArrayList<>();
+        byte[] actArr = new byte[Statix.nbGROUPS()];
+        for (int i = 0; i < actArr.length; i++) {
+            actArr[i] = (byte) -1;
+        }
+        outcomes.feedForPrint(outcomesStr, actArr);
+        for (int i = 0; i < outcomesStr.size(); i++) {
+            System.out.print("   ");
+            Misc.println(outcomesStr.get(i).arr, true);
         }
     }
 
     public void printFirsts() {
         Misc.print2D(firsts, true);
-        System.out.println("config subPoints: " + doableSubs.size());
+        System.out.println("config subPoints: " + outcomes.size());
     }
 
     public static void printSome(int jump) {
@@ -95,34 +105,26 @@ public class AscendStorer implements Comparable<AscendStorer> {
     }
 
     /**
-     * Adds all subs of sequence to subsBank (at least those which weren't in
-     * subsBank yet)
+     * Adds all subs of sequence to outcomes (at least those which weren't in it
+     * yet)
      *
      * @param sequence right-to-left possible display of the last treated pot
-     * @param subsBank all possibles subs found yet for one draw sequence of
-     * previous pots
      *
      */
-    public static void includePossibleLastPot(byte[] sequence, ArrayList<ByteArray> subsBank) {
+    public void includePossibleLastPot(byte[] sequence) {
         boolean[] iterArr = new boolean[Statix.nbGROUPS()];
         do {
             byte[] toInject = new byte[sequence.length];
             for (int i = 0; i < toInject.length; i++) {
                 toInject[i] = iterArr[i] ? sequence[i] : -1;
             }
-            ByteArray be = new ByteArray(toInject);
-            int idx = Collections.binarySearch(subsBank, be);
-            if (idx >= 0) {
-                continue;
-            }
-            idx = -idx - 1;
-            subsBank.add(idx, be);
+            outcomes.inject(toInject);
         } while (CombMeths.boolIter(iterArr));
 
     }
 
     public boolean has(byte[] toResearch) {
-        return Collections.binarySearch(doableSubs, new ByteArray(toResearch)) >= 0;
+        return outcomes.has(toResearch);
     }
 
     /**
@@ -144,21 +146,10 @@ public class AscendStorer implements Comparable<AscendStorer> {
         for (byte i = 0; i < Statix.nbGROUPS(); i++) {
             arr[arr.length - 1][i] = i;
         }
-        traule(arr);//ascendiumSort(arr); qscg
+        ascendiumSort(arr);
         return arr;
     }
 
-    public static void ascendiumSort(byte[][] arr) {
-        for (int i = Statix.nbHOSTS(); i < Statix.nbGROUPS(); i++) {
-            for (int j = i + 1; j < Statix.nbGROUPS(); j++) {
-                if (columnCompare(arr, i, j) > 0) {
-                    columnSwap(arr, i, j);
-                }
-            }
-        }
-    }
-
-    //TODO unusable?
     public static void ascendiumSort(byte[][] arr, int left, int right) {
         for (int i = left; i < right; i++) {
             for (int j = i + 1; j < right; j++) {
@@ -169,27 +160,7 @@ public class AscendStorer implements Comparable<AscendStorer> {
         }
     }
 
-    //TODO unusable?
-    public static void ascendiumSortTrololo(byte[][] arr) {
-        int lowIdx = 0;
-        int highIdx = 1;
-        byte currentCont0 = arr[0][0];
-        while (highIdx < Statix.nbHOSTS()) {
-            byte nextCont0 = arr[0][highIdx];
-            if (currentCont0 == nextCont0) {
-                highIdx++;
-                continue;
-            }
-            ascendiumSort(arr, lowIdx, highIdx);
-            currentCont0 = nextCont0;
-            lowIdx = highIdx;
-            highIdx++;
-
-        }
-        ascendiumSort(arr, Statix.nbHOSTS(), Statix.nbGROUPS());
-    }
-
-    public static void traule(byte[][] arr) {
+    public static void ascendiumSort(byte[][] arr) {
         for (int lowIdx = 0; lowIdx < Statix.nbHOSTS(); lowIdx++) {
             for (int highIdx = lowIdx + 1; highIdx < Statix.nbGROUPS(); highIdx++) {
                 if (arr[0][lowIdx] != arr[0][highIdx]) {
@@ -204,10 +175,10 @@ public class AscendStorer implements Comparable<AscendStorer> {
     }
 
     public static void columnSwap(byte[][] arr, int c0, int c1) {
-        for (int i = 0; i < arr.length; i++) {
-            byte temp = arr[i][c0];
-            arr[i][c0] = arr[i][c1];
-            arr[i][c1] = temp;
+        for (byte[] arrB : arr) {
+            byte temp = arrB[c0];
+            arrB[c0] = arrB[c1];
+            arrB[c1] = temp;
         }
     }
 
@@ -257,6 +228,10 @@ public class AscendStorer implements Comparable<AscendStorer> {
     }
 
     public boolean isEmpty() {
-        return doableSubs.isEmpty();
+        return outcomes.isEmpty();
+    }
+
+    public static boolean detectBuild() {
+        return ascendStorerBank.size() > 0;
     }
 }

@@ -9,9 +9,9 @@ import central.BankAndWaiters;
 import central.DebugData;
 import central.Misc;
 import central.NodeList;
+import central.StatFida;
 import central.StateComparator;
 import central.Statix;
-import central.Stats;
 import central.TimerManager;
 import java.util.Arrays;
 import tools.GeneralMeths;
@@ -103,12 +103,24 @@ public class Node {
         return totNbPoss / (double) Statix.commonDenominator(level);
     }
 
-    void expand(NodeList childs, NodeList waiters, AscendStorer asSt, byte[] perm) {
+    void expand(StatFida stats, NodeList childs, NodeList waiters, AscendStorer asSt, byte[] perm) {
 
-        if (level < Statix.nbHOSTS()) {
-            //Host case
-            byte group = (byte) level;
-            byte cont = Statix.getHostCont(group);
+        if (level < stats.getNbForced()) {
+            //Forced case
+
+            int round = level / Statix.nbGROUPS();
+            //Finding next group that will be forced
+            int virginGroupIdx = Statix.nbGROUPS() - 1;
+            while (virginGroupIdx >= 0 && potsState[round][virginGroupIdx] == -1) {
+                virginGroupIdx--;
+            }
+            virginGroupIdx++;
+            while (stats.getForcedTIdx(round, virginGroupIdx) == -1) {
+                virginGroupIdx++;
+            }
+            int teamIdx = stats.getForcedTIdx(round, virginGroupIdx);
+            byte group = (byte) virginGroupIdx;
+            byte cont = Statix.getTeam(round, teamIdx).cont();
             Node child = new Node(this, cont, group, 1);
             childs.add(child);
             return;
@@ -132,30 +144,14 @@ public class Node {
         }
     }
 
-    void expand(NodeList childs, NodeList waiters) {
-        expand(childs, waiters, null, null);
+    void expand(StatFida stats, NodeList childs, NodeList waiters) {
+        expand(stats, childs, waiters, null, null);
     }
 
-    void expand() {
-        expand(BankAndWaiters.bank[level + 1], BankAndWaiters.waiters[level + 1]);
+    void expand(StatFida stats) {
+        expand(stats, BankAndWaiters.bank[level + 1], BankAndWaiters.waiters[level + 1]);
     }
 
-    /**
-     * Constructor of level 1 node (qatar hosts so always is in group A)
-     *
-     * @param qatarFloat useless parameter, just to distinguish from level 0
-     * constructors
-     */
-    /*public Node(float qatarFloat) {
-        this();
-        for (byte  i = 0; i < Statix.nbHOSTS(); i++) {
-            byte cont = Statix.getHostCont(i);
-            potsState[0][level] = cont;
-            trRemains[cont]--;
-            level++;
-
-        }
-    }*/
     public static Node postHostsNode() {
         Node res = new Node();
         for (int i = 0; i < Statix.nbHOSTS(); i++) {
@@ -176,46 +172,61 @@ public class Node {
     }
 
     public Node(Node parent, byte cont, byte group, long newNbPoss) {
-        level = parent.level + 1;
+
+        level = parent.level;
+        potsState = GeneralMeths.getCopy(parent.potsState);
+        trRemains = Arrays.copyOf(parent.trRemains, parent.trRemains.length);
+        forward(cont, group);
+        totNbPoss = newNbPoss;
+
+    }
+
+    /**
+     * Dangerous. Removes a draw. Warnings : Should not be called with random
+     * arguments since it may lead to corrupted state. It also always corrupts
+     * probability attribute so this node should not be used to calculate
+     * probabilities.
+     *
+     * @param cont
+     * @param group
+     */
+    public final void backward(byte cont, byte group) {
         int round = level / Statix.nbGROUPS();
+        if (level % Statix.nbGROUPS() == 0) {
+            if (this.hazardeousVirginLineCheck()) {
+                potsState = Misc.removeVirginLine(potsState);
+            }
+            trRemains = new int[Statix.nbCONTS()];
+            round--;
+        }
+        level--;
+        potsState[round][group] = -1;
+        trRemains[cont]++;
 
-        int inTrLevel = level % Statix.nbGROUPS();
+    }
 
-        if (inTrLevel == 0) {
-            if (round < 4) {
-                trRemains = Statix.getCopyOfPot(round);
-                potsState = new byte[round + 1][Statix.nbGROUPS()];
-                for (int i = 0; i < round; i++) {
-                    System.arraycopy(parent.potsState[i], 0, potsState[i], 0, Statix.nbGROUPS());
-                }
-                for (int i = 0; i < Statix.nbGROUPS(); i++) {
-                    potsState[round][i] = -1;
-                }
-                potsState[round - 1][group] = cont;
-            } else {
-                trRemains = new int[0];
-                potsState = GeneralMeths.getCopy(parent.potsState);
-                potsState[round - 1][group] = cont;
+    /**
+     * Dangerous. Removes a draw. Warnings : Should not be called with random
+     * arguments since it may lead to corrupted state. It also always corrupts
+     * probability attribute so this node should not be used to calculate
+     * probabilities.
+     *
+     * @param cont
+     * @param group
+     */
+    public final void forward(byte cont, byte group) {
+        int prevRound = getRound();
+        potsState[prevRound][group] = cont;
+        if (level % Statix.nbGROUPS() == Statix.nbGROUPS() - 1) {
+            if (level + 1 != 4 * Statix.nbGROUPS()) {
+                potsState = Misc.addVirginLine(potsState);
+                trRemains = Statix.getCopyOfPot(prevRound + 1);
             }
 
         } else {
-
-            potsState = GeneralMeths.getCopy(parent.potsState);
-            potsState[round][group] = cont;
-
-            trRemains = Arrays.copyOf(parent.trRemains, parent.trRemains.length);
             trRemains[cont]--;
         }
-        if (round == 4) {
-
-            boolean ok = completeValidation();
-            if (!ok) {
-                printPotsState();
-                int debug = 1;
-            }
-
-        }
-        totNbPoss = newNbPoss;
+        level++;
 
     }
 
@@ -357,8 +368,8 @@ public class Node {
     }
 
     public byte leftMostPlace(byte cont, AscendStorer ascendStorer, byte[] perm) {
-        if (new StateComparator().compare(this, DebugData.node) == 0) {
-            int debug = 1;
+        if (ascendStorer == null) {
+            return leftMostPlace(cont);
         }
         int round = level / Statix.nbGROUPS();
         byte[] toResearch = new byte[Statix.nbGROUPS()];
@@ -422,7 +433,7 @@ public class Node {
      * @return all doable nodes 8 levels (a full round) after this node
      * (probabilities included)
      */
-    public NodeList octoChilds(AscendStorer asSt, byte[] perm) {
+    public NodeList octoChilds(StatFida stats, AscendStorer asSt, byte[] perm) {
         NodeList actual = new NodeList();
         actual.add(this);
 
@@ -446,7 +457,7 @@ public class Node {
             int limit = actual.size();
             for (int j = 0; j < limit; j++) {
                 Node node = actual.get(j);
-                node.expand(nextChilds, nextWaiters, asSt, perm);
+                node.expand(stats, nextChilds, nextWaiters, asSt, perm);
             }
             nextChilds.sort(Statix.scmp);
             for (int j = 0; j < nextWaiters.size(); j++) {
@@ -469,7 +480,7 @@ public class Node {
 
     }
 
-    public void bigExpand() {
+    public void bigExpand(StatFida stats) {
         /*System.out.println("----");
         this.printPotsState();
         System.out.println("totNbPoss: "+totNbPoss);
@@ -489,7 +500,7 @@ public class Node {
             DebugData.possCounter += this.totNbPoss;
             DebugData.probCounter += this.probability();
 
-            Stats.feed(potsState, this.totNbPoss);
+            stats.feed(potsState, this.totNbPoss);
             return;
         }
         NodeList octoChilds;
@@ -499,7 +510,7 @@ public class Node {
             byte[] perm = ascendStorerPerm[round];
 
             AscendStorer asSt = AscendStorer.getAscendStorer(ascendStorerPerm);
-            octoChilds = octoChilds(asSt, perm);
+            octoChilds = octoChilds(stats, asSt, perm);
             if (round == 3) {
                 DebugData.tanosCounter++;
                 /*if (DebugData.tanosCounter % 1000 == 0) {
@@ -507,26 +518,22 @@ public class Node {
                 }*/
             }
         } else {
-            octoChilds = octoChilds(null, null);
+            octoChilds = octoChilds(stats, null, null);
         }
         for (int i = 0; i < octoChilds.size(); i++) {
             if (round < 2 && !DebugData.debging) {
                 TimerManager.notifyCompletion(round, octoChilds.size());
             }
             Node n = octoChilds.get(i);
-            n.bigExpand();
+            n.bigExpand(stats);
 
         }
 
     }
 
     protected void asStLeftToRightExpand(AscendStorer asSt, int roundToDetail) {
-        //if (Math.random()<.0001)
-        //    this.printPotsState();
         byte groupIdx = (byte) (level % Statix.nbGROUPS());
         byte round = (byte) (level / Statix.nbGROUPS());
-        //AscendStorer newAscendStorer;
-        boolean virginLineAdd = false;
 
         boolean newDygon = false;
         if (new StateComparator().compare(this, DebugData.node) == 0) {
@@ -552,11 +559,6 @@ public class Node {
                 }
 
             }
-            if (round != 0) {
-                virginLineAdd = true;
-                potsState = Misc.addVirginLine(potsState);
-                trRemains = Statix.getCopyOfPot(round);
-            }
 
         }
         for (byte i = 0; i < Statix.nbCONTS(); i++) {
@@ -566,21 +568,9 @@ public class Node {
             if (!groupCanTake(groupIdx, i)) {
                 continue;
             }
-            /*if (!isCompletable( i,groupIdx)) {
-                continue;
-            }*/
-            trRemains[i]--;
-            potsState[round][groupIdx] = i;
-            level++;
-
+            forward(i, groupIdx);
             asStLeftToRightExpand(asSt, roundToDetail);
-            level--;
-            trRemains[i]++;
-            potsState[round][groupIdx] = -1;
-        }
-        if (virginLineAdd) {
-            potsState = Misc.removeVirginLine(potsState);
-            trRemains = new int[Statix.nbCONTS()];
+            backward(i, groupIdx);
         }
         if (newDygon) {
             AscendStorer.findAndInsert(asSt);
