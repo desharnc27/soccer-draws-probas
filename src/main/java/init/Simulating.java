@@ -10,7 +10,7 @@ import algocore.Node;
 import central.CalculusMain;
 import central.Misc;
 import central.StatByTeams;
-import central.StatFida;
+import central.StatByConts;
 import central.Statix;
 import exception.ProbaParamEx;
 import java.util.ArrayList;
@@ -54,7 +54,7 @@ public class Simulating {
     }
 
     public static void interactiveLoop(Flower scanner) {
-        StatFida stats;
+        StatByConts stats;
         while ((stats = interactiveSim(scanner)) == null) {
             //Nothing to do other than the condition fct itself;
         }
@@ -66,7 +66,7 @@ public class Simulating {
                 String qrRequest = scanner.questionStr(question, "[\\w]*");
                 if (qrRequest.length() > 1) {
                     String filename = MegaMain.customFile(Statix.getDataName(), qrRequest);
-                    stats.StoreDankInfile(filename);
+                    stats.StoreStatsInfile(filename);
                 }
             }
         }
@@ -79,7 +79,7 @@ public class Simulating {
      * @param scanner
      * @return true if user wants to do another simulation, false otherwise
      */
-    public static StatFida interactiveSim(Flower scanner) {
+    public static StatByConts interactiveSim(Flower scanner) {
         int NB_TEAMS = 4 * Statix.nbGROUPS();
         Node actua = new Node();
         ArrayList<Team> teams = new ArrayList<>();
@@ -93,7 +93,7 @@ public class Simulating {
             String[] options = new String[]{"undo*", "current", "next*", "exactFromHere",
                 MegaMain.SIMUL_AVG + "*", MegaMain.SIMUL_HARD + "*"};
             String[] understood = MegaMain.crazyChooseOption(scanner, options);
-            StatFida stats;
+            StatByConts stats;
             switch (understood[0]) {
                 case "undo":
                     if (teams.size() <= Statix.nbHOSTS()) {
@@ -167,7 +167,7 @@ public class Simulating {
 
                 case MegaMain.SIMUL_AVG:
                     //stats = StatFida.createAndGet(MegaMain.SIMUL_AVG);
-                    stats = new StatFida();
+                    stats = new StatByConts();
                     int sampleSize;
                     try {
                         sampleSize = Integer.parseInt(understood[1]);
@@ -196,7 +196,7 @@ public class Simulating {
                     return stats;
                 case "exactFromHere":
                     //stats = StatFida.createAndGet(MegaMain.EXACT_FROM_SOME);
-                    stats = new StatFida();
+                    stats = new StatByConts();
                     stats.setForcedTeams(teamBdOrder, groupOrder);
                     CalculusMain.buildExactStats(stats);
                     return stats;
@@ -207,7 +207,7 @@ public class Simulating {
 
     }
 
-    private static void expandBySample(StatFida stats, int sampleSize, Node actua, boolean[][] teamDrafted,
+    private static void expandBySample(StatByConts stats, int sampleSize, Node actua, boolean[][] teamDrafted,
             ArrayList<Byte> teamBdOrder, ArrayList<Team> teams, ArrayList<Byte> groupOrder) {
 
         for (int i = 0; i < sampleSize; i++) {

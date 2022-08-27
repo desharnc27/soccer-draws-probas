@@ -31,7 +31,7 @@ public class CalculusMain {
         nodeList.clear();
     }
 
-    public static void buildExactStats(StatFida stats) {
+    public static void buildExactStats(StatByConts stats) {
         //buildAscendStorage();
         Node root = new Node();
         long t0 = System.currentTimeMillis();

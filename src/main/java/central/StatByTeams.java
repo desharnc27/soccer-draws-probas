@@ -1,17 +1,14 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+/**
+ *
+ * @author desharnc27
+ *
+ * This class is not used yet, no object of this class is ever created
  */
 package central;
 
 import java.util.ArrayList;
 
-/**
- *
- * @author desharnc27
- */
-public class StatByTeams extends StatFida {
+public class StatByTeams extends StatByConts {
 
     long[][][][][] detailedIndividual;
 

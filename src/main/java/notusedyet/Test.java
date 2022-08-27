@@ -7,6 +7,7 @@ package notusedyet;
 
 import central.Misc;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Scanner;
 
@@ -25,8 +26,7 @@ public class Test {
         int nbChoicies = */
     }
 
-    public static void main(String[] args) {
-        main0();
+    public static void main1() {
         Scanner scanner = new Scanner(System.in);
         System.out.println(scanner.delimiter());
         System.out.println(System.in.getClass());
@@ -49,5 +49,18 @@ public class Test {
         long res = (long) Misc.getValAt(test, indexes);
         System.out.println(res);
 
+    }
+
+    public static void main2() {
+        long lg = 5142546011L;
+        byte[] bytes = Misc.longToBytes(lg);
+        long lg2 = Misc.bytesToLong(bytes);
+        System.out.println(lg);
+        System.out.println(Arrays.toString(bytes));
+        System.out.println(lg2);
+    }
+
+    public static void main(String[] args) {
+        main2();
     }
 }

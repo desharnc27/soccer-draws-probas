@@ -9,7 +9,7 @@ import central.BankAndWaiters;
 import central.DebugData;
 import central.Misc;
 import central.NodeList;
-import central.StatFida;
+import central.StatByConts;
 import central.StateComparator;
 import central.Statix;
 import central.TimerManager;
@@ -103,7 +103,7 @@ public class Node {
         return totNbPoss / (double) Statix.commonDenominator(level);
     }
 
-    void expand(StatFida stats, NodeList childs, NodeList waiters, AscendStorer asSt, byte[] perm) {
+    void expand(StatByConts stats, NodeList childs, NodeList waiters, AscendStorer asSt, byte[] perm) {
 
         if (level < stats.getNbForced()) {
             //Forced case
@@ -115,10 +115,10 @@ public class Node {
                 virginGroupIdx--;
             }
             virginGroupIdx++;
-            while (stats.getForcedTIdx(round, virginGroupIdx) == -1) {
+            while (stats.getForcedTeamIdx(round, virginGroupIdx) == -1) {
                 virginGroupIdx++;
             }
-            int teamIdx = stats.getForcedTIdx(round, virginGroupIdx);
+            int teamIdx = stats.getForcedTeamIdx(round, virginGroupIdx);
             byte group = (byte) virginGroupIdx;
             byte cont = Statix.getTeam(round, teamIdx).cont();
             Node child = new Node(this, cont, group, 1);
@@ -144,11 +144,11 @@ public class Node {
         }
     }
 
-    void expand(StatFida stats, NodeList childs, NodeList waiters) {
+    void expand(StatByConts stats, NodeList childs, NodeList waiters) {
         expand(stats, childs, waiters, null, null);
     }
 
-    void expand(StatFida stats) {
+    void expand(StatByConts stats) {
         expand(stats, BankAndWaiters.bank[level + 1], BankAndWaiters.waiters[level + 1]);
     }
 
@@ -433,7 +433,7 @@ public class Node {
      * @return all doable nodes 8 levels (a full round) after this node
      * (probabilities included)
      */
-    public NodeList octoChilds(StatFida stats, AscendStorer asSt, byte[] perm) {
+    public NodeList octoChilds(StatByConts stats, AscendStorer asSt, byte[] perm) {
         NodeList actual = new NodeList();
         actual.add(this);
 
@@ -480,7 +480,7 @@ public class Node {
 
     }
 
-    public void bigExpand(StatFida stats) {
+    public void bigExpand(StatByConts stats) {
         /*System.out.println("----");
         this.printPotsState();
         System.out.println("totNbPoss: "+totNbPoss);

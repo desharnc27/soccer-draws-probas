@@ -14,8 +14,13 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+import java.util.ListIterator;
 
 /**
  * This class contains other basic methods used in this project.
@@ -382,7 +387,7 @@ public class GeneralMeths {
         }
         return res;
     }
-    
+
     /**
      * Returns a copy of a 2D array of byte
      *
@@ -396,7 +401,6 @@ public class GeneralMeths {
         }
         return res;
     }
-
 
     /**
      * Randomly shuffle all values in tab
@@ -824,6 +828,70 @@ public class GeneralMeths {
 
     }
 
+    /**
+     * Maps an array of byte to an array of their String representations
+     *
+     * @param arr array of byte
+     * @return array of String representations
+     */
+    public static String[] mapToString(byte[] arr) {
+        String[] res = new String[arr.length];
+        for (int i = 0; i < arr.length; i++) {
+            res[i] = String.valueOf(arr[i]);
+        }
+        return res;
+    }
+
+    /**
+     * Maps an array of int to an array of their String representations
+     *
+     * @param arr array of int
+     * @return array of String representations
+     */
+    public static String[] mapToString(int[] arr) {
+        String[] res = new String[arr.length];
+        for (int i = 0; i < arr.length; i++) {
+            res[i] = String.valueOf(arr[i]);
+        }
+        return res;
+    }
+
+    /**
+     * Returns a string identical to input except that uppercase letters become
+     * lowercase
+     *
+     * @param input
+     * @return a string identical to input except that uppercase letters become
+     * lowercase
+     */
+    public static String decapitalize(String input) {
+        char[] arr = input.toCharArray();
+        for (int i = 0; i < arr.length; i++) {
+            if (arr[i] >= 'A' && arr[i] <= 'Z') {
+                arr[i] = (char) (arr[i] + 'a' - 'A');
+            }
+        }
+        return new String(arr);
+    }
+
+    /**
+     * Returns a string identical to input except that lowercase letters become
+     * uppercase
+     *
+     * @param input
+     * @return a string identical to input except that lowercase letters become
+     * uppercase
+     */
+    public static String capitalize(String input) {
+        char[] arr = input.toCharArray();
+        for (int i = 0; i < arr.length; i++) {
+            if (arr[i] >= 'a' && arr[i] <= 'z') {
+                arr[i] = (char) (arr[i] + 'A' - 'a');
+            }
+        }
+        return new String(arr);
+    }
+
     /*
      * Converts an arrayList into an array
      *
@@ -838,6 +906,41 @@ public class GeneralMeths {
         return arr;
 
     }*/
+    /**
+     * Surrounds a String with quotation marks
+     *
+     * @param s any String
+     * @return s surrounded with quotation marks
+     */
+    public static String guillemets(String s) {
+        return "\"" + s + "\"";
+    }
+
+    /**
+     * Prints the content of a file
+     *
+     * @param filename name of the file
+     */
+    public static void displayFile(String filename) {
+        Path path = Paths.get(filename);
+        List<String> lines;
+        try {
+            lines = Files.readAllLines(path);
+            for (int i = 0; i < lines.size(); i++) {
+                System.out.println(lines.get(i));
+            }
+        } catch (IOException ex) {
+            System.out.println("File not found: " + filename);
+        }
+
+    }
+
+    /**
+     * Put all the content of a file a one String and returns it
+     *
+     * @param filename name of the file
+     * @return a string equal to all the file's content
+     */
     public static String fileToString(String filename) {
 
         File file;
@@ -860,6 +963,91 @@ public class GeneralMeths {
             return null;
         }
         return res;
+    }
+
+    /**
+     * Returns the the first idx in an array of string that matches a word -1 if
+     * no match found
+     *
+     * @param word any string
+     * @param arr any array of string
+     * @return the the first idx in an array of string that matches a word, -1
+     * if no match found
+     */
+    public static int indexOf(String word, String[] arr) {
+        for (int i = 0; i < arr.length; i++) {
+            if (arr[i].equals(word)) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    public static <T> String toString(List<T> list) {
+        String[] strs = new String[list.size()];
+        for (int i = 0; i < list.size(); i++) {
+            strs[i] = list.get(i).toString();
+        }
+        String pack = String.join(",", strs);
+        return "[" + pack + "]";
+    }
+
+    /**
+     * Returns true if the list contains an object equivalent to val, false
+     * otherwise.
+     *
+     * @param <T> any generic
+     * @param list any list of T objects
+     * @param val the T object for which we search an equivalent
+     * @return true if the list contains an object equivalent to val, false
+     * otherwise.
+     */
+    public static <T extends Comparable<T>> boolean searchBackwads(List<T> list, T val) {
+        ListIterator<T> li = list.listIterator(list.size());
+        while (li.hasPrevious()) {
+            T t = li.previous();
+            if (val.compareTo(t) == 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Returns the value in an any-dimension array at a specific location.
+     * Returns an object, which the developer will then have to cast back to the
+     * appropriate class. Warning: will throw an exception if the length of
+     * indexes does not match the number of dimensions of the array, or if any
+     * index is out of bounds for its axis.
+     *
+     * @param maybeArr an any-dimension array
+     * @param indexes coordinates (indexes contains one value for each axis in
+     * maybeArr)
+     * @return
+     */
+    public static Object getValAt(Object maybeArr, int[] indexes) {
+        return getValAt(maybeArr, indexes, 0);
+    }
+
+    private static Object getValAt(Object maybeArr, int[] indexes, int currentIdx) {
+        if (maybeArr.getClass().isArray()) {
+            try {
+                Object[] conv = (Object[]) maybeArr;
+                return getValAt(conv[indexes[currentIdx]], indexes, currentIdx + 1);
+            } catch (ClassCastException e) {
+            }
+            try {
+                int[] conv = (int[]) maybeArr;
+                return conv[indexes[currentIdx]];
+            } catch (ClassCastException e) {
+            }
+            try {
+                long[] conv = (long[]) maybeArr;
+                return conv[indexes[currentIdx]];
+            } catch (ClassCastException e) {
+            }
+        }
+        return maybeArr;
     }
 
 }

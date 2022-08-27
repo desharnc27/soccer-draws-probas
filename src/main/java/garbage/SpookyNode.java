@@ -34,6 +34,4 @@ public class SpookyNode {
         permutation[c0] = permutation[c1];
         permutation[c1] = temp;
     }*/
-
-            
 }

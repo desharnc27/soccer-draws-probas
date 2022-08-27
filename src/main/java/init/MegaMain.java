@@ -8,7 +8,7 @@ package init;
 import central.CalculusMain;
 import central.DebugData;
 import central.Misc;
-import central.StatFida;
+import central.StatByConts;
 import central.Statix;
 import exception.InitParseException;
 import exception.ProbaParamEx;
@@ -65,7 +65,7 @@ public class MegaMain {
     }
 
     public static String calculFile(String scenario) {
-        return dataRoot() + scenario + File.separator + STAT_STORAGE_NAME;
+        return dataRoot() + scenario + File.separator + STAT_STORAGE_NAME + ".statf";
     }
 
     public static String customFile(String scenario, String customName) {
@@ -165,7 +165,7 @@ public class MegaMain {
                     if (input.equals(options[i])) {
                         return i;
                     }
-                    if (chosenIdx > 0) {
+                    if (chosenIdx >= 0) {
                         System.out.print(Misc.ambiguousStr(input, options[chosenIdx], options[i]));
                         chosenIdx = -2;
                         break;
@@ -251,8 +251,7 @@ public class MegaMain {
 
     }
 
-    private static double calculateProba(int[][] reqs, StatFida stats) {
-        stats.printForced();
+    private static double calculateProba(int[][] reqs, StatByConts stats) {
         double sumOfAllCases = 0;
         for (int i0 = 0; i0 < reqs[0].length; i0++) {
             for (int i1 = 0; i1 < reqs[1].length; i1++) {
@@ -307,10 +306,11 @@ public class MegaMain {
 
     private static void exactApp(Flower scanner) {
         //StatFida stats = StatFida.createAndGet(MegaMain.EXACT_INIT_STATS);
-        StatFida stats = new StatFida();
+        StatByConts stats = new StatByConts();
         //data management
         boolean recalculate = true;
         File calculFile = new File(calculFile(Statix.getDataName()));
+        System.out.println(calculFile.getAbsolutePath());
         if (calculFile.exists()) {
             System.out.print(calculFile.getPath() + " already contains calculation data. ");
             System.out.println("Load it or restart calculations from scratch?");
@@ -326,7 +326,7 @@ public class MegaMain {
         if (!recalculate) {
 
             try {
-                stats.loadDankFromFile(calculFile.getPath());
+                stats.loadStatsFromFile(calculFile.getPath());
             } catch (InitParseException | IOException ex) {
                 System.out.println("Error while loading " + calculFile.getPath());
                 System.out.println(ex.getMessage());
@@ -342,16 +342,16 @@ public class MegaMain {
             CalculusMain.buildAscendStorage();
             CalculusMain.buildExactStats(stats);
             //stats.StoreInfile(calculFile.getPath());
-            stats.StoreDankInfile(calculFile.getPath());
+            stats.StoreStatsInfile(calculFile.getPath());
         }
         probaQuast(scanner, stats);
 
     }
 
-    public static void probaQuast(Flower scanner, StatFida stats) {
+    public static void probaQuast(Flower scanner, StatByConts stats) {
         boolean still = true;
         byte consecutiveMistakes = 0;
-        stats.debugVerifyWholeSum();
+        stats.verifySums();
         while (still) {
             DebugData.cmdCounter = 0;
             try {
@@ -396,7 +396,7 @@ public class MegaMain {
         //Simulating.simulateOne((byte) 2);
     }
 
-    private static double manageProbaParamCmd(Flower scanner, StatFida stats) throws ProbaParamEx {
+    private static double manageProbaParamCmd(Flower scanner, StatByConts stats) throws ProbaParamEx {
         System.out.println("What probability would you like to calculate?");
         String input = scanner.next();
         MegaMain.checkExit(input);
@@ -460,7 +460,7 @@ public class MegaMain {
         }
 
         double proba = calculateProba(reqs, stats);
-        System.out.println("Probability of that scenario " + proba);
+        System.out.println("Probability of that scenario: " + proba);
         return -2;
     }
 

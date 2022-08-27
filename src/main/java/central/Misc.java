@@ -255,7 +255,6 @@ public class Misc {
     public static String inputUnsolved(String input) {
         return ("Input " + input + " not understood.");
     }
-    //New 
 
     public static <T> T removeLast(List<T> list) {
         return list.remove(list.size() - 1);
@@ -287,15 +286,39 @@ public class Misc {
 
     }
 
+    /**
+     * Returns the value in an any-dimension array at a specific location.
+     * Returns an object, which the developer will then have to cast back to the
+     * appropriate class. Warning: will throw an exception if the length of
+     * indexes does not match the number of dimensions of the array, or if any
+     * index is out of bounds for its axis.
+     *
+     * @param maybeArr an any-dimension array
+     * @param indexes coordinates (indexes contains one value for each axis in
+     * maybeArr)
+     * @return
+     */
     public static Object getIntValAt(Object maybeArr, int[] indexes) {
         return getValAt(maybeArr, indexes, 0);
     }
 
+    /**
+     * Returns the value in an any-dimension array at a specific location.
+     * Returns an object, which the developer will then have to cast back to the
+     * appropriate class. Warning: will throw an exception if the length of
+     * indexes does not match the number of dimensions of the array, or if any
+     * index is out of bounds for its axis.
+     *
+     * @param maybeArr an any-dimension array
+     * @param indexes coordinates (indexes contains one value for each axis in
+     * maybeArr)
+     * @return
+     */
     public static Object getValAt(Object maybeArr, int[] indexes) {
         return getValAt(maybeArr, indexes, 0);
     }
 
-    public static Object getValAt(Object maybeArr, int[] indexes, int currentIdx) {
+    private static Object getValAt(Object maybeArr, int[] indexes, int currentIdx) {
         if (maybeArr.getClass().isArray()) {
             try {
                 Object[] conv = (Object[]) maybeArr;

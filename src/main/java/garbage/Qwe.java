@@ -12,6 +12,7 @@ import java.util.ArrayList;
  * @author desharnc27
  */
 public class Qwe {
+
     ArrayList<Integer[]> list = new ArrayList<>();
     //byte [] arr = new byte
 }

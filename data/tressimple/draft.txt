@@ -1,8 +1,8 @@
 // Note: lines that begin with // are not parsed, just comments. Lines of less than 2 characters are also ignored.
 
 Number of pots,4
-Number of groups,3
-Number of mono-continents,3
+Number of groups,2
+Number of mono-continents,5
 
 //Hybrid continents represent a set of contients. They are used when playoff matches are still to 
 //be played between several teams that are not yet qualified for the draft
@@ -23,33 +23,22 @@ Number of hosts,1
 
 //Minima and maxima gives inclusive bounds for each mono-continent, regarding its presence in each group.
 
-Mono-continents minima,1,1,1
-Mono-continents maxima,2,2,2
+Mono-continents minima,0,0,0,0,0
+Mono-continents maxima,1,1,1,1,1
 
 
 //Put the teams in pot order (the nbGroups first teams will be in first pot, then the next nbGroups teams will be in second pot, etc)
 //They must all be followed by their continent id (seperated by comma)
 //To choose which team(s) is(are) host(s), place it(them) first. Hosts are always in pot 1,
 
-one,2
-two,2
-three,0
+a0,0
+a1,1
 
+b0,0
+b1,2
 
-un,1
-deux,1
-trois,0
+c0,1
+c1,2
 
-
-uh,1
-dei,2
-trei,0
-
-uno,1
-dos,2
-tres,0
-
-//2 2 0
-//1 1 0
-//0 1 2
-//2 0 1
+d0,3
+d1,4
