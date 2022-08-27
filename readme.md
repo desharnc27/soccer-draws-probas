@@ -25,13 +25,10 @@ Notes when you are asked to choose between many options:
 
 --------
 
-
 First, many databases will be proposed to you, so enter the name of the database you want to use. You probably want qatar2022, others are just for testing up to now.
-
 Then, choose between "simulator" and "exact", and "load-custom". "exact" feature (the most important feature of this program) gives you access to all exact probabilities from initial state, while "simulator" use simulation tools instead of exact probabilities. "load-custom" is broken, described far below.
 --------
 If you choose "exact", you may then enter "restart" to make the program recalculate all the probabilities, but since they are already summarized in a file, you may just want to reload them with "load" which is much faster.
-
 Then, enjoy. You may enter any scenario and the program will tell you its probability. For help on the format on your input, enter "help".
 --------
 
