@@ -1,4 +1,4 @@
-Note: this project is not terminated an barely commented, however the most important features work. I would fix the rest if I had time.
+Note: this project is not terminated and barely commented, however the most important features work. I would fix the rest if I had time.
 
 On April 1st, the final draw for soccer world cup 2022 (hosted in Qatar) will be held. (Or was held, depending on what day we are today)
 
@@ -17,11 +17,11 @@ The program launches.
 
 Notes when you are asked to choose between many options:
 
-- whenever you want to type an option, you may type only a prefix of it as long as it does not match any other option. For an example, when you want to choose the qatar2022 database, typig "qa" is enough.
+- whenever you want to type an option, you may type only a prefix of it as long as it does not match any other option. For an example, when you want to choose the qatar2022 database, typing "qa" is enough.
 
 - typing "exit" always allows you to close the program.
 
-- if an option ends with an asterisk, it means at has to be entered with a number, seperated with comma. Ex: you can enter "next,8" for option "next\*"
+- if an option ends with an asterisk, it means at has to be entered with a number, separated with comma. Ex: you can enter "next,8" for option "next\*"
 
 --------
 
@@ -37,11 +37,8 @@ Then, enjoy. You may enter any scenario and the program will tell you its probab
 
 If you rather choose "simulator". You get a simulation tool. You have six options: undo\*,current,next\*,exactFromHere,simulAvg\*,simulHard\*
 
-The purpose of the first three options are obvious, just play with it. simulHard and simulAvg are broken, (that's what's meant by "this project is not completed"), so don't use them. "exactFromHere" allows you to caculate the  exact probabilities, but starting from the current state rather than the initial state.
+The purpose of the first three options are obvious, just play with it. simulHard and simulAvg are broken, (that's what's meant by "this project is not completed"), so don't use them. "exactFromHere" allows you to calculate the  exact probabilities, but starting from the current state rather than the initial state.
 
 --------
 
 "exactFromHere" also produces a custom file which you should be able to load by "load-custom" the next time you launch the program, but No! This feature is also broken.
-
-
-
