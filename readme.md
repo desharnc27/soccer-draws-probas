@@ -21,10 +21,9 @@ Notes when you are asked to choose between many options:
 
 - typing "exit" always allows you to close the program.
 
-- if an option ends with an asterisk, it means at has to be entered with a number, seperated with comma. Ex: you can enter "next,8" for option "next*"
+- if an option ends with an asterisk, it means at has to be entered with a number, seperated with comma. Ex: you can enter "next,8" for option "next\*"
 
 --------
-
 First, many databases will be proposed to you, so enter the name of the database you want to use. You probably want qatar2022, others are just for testing up to now.
 Then, choose between "simulator" and "exact", and "load-custom". "exact" feature (the most important feature of this program) gives you access to all exact probabilities from initial state, while "simulator" use simulation tools instead of exact probabilities. "load-custom" is broken, described far below.
 --------
@@ -32,7 +31,7 @@ If you choose "exact", you may then enter "restart" to make the program recalcul
 Then, enjoy. You may enter any scenario and the program will tell you its probability. For help on the format on your input, enter "help".
 --------
 
-If you rather choose "simulator". You get a simulation tool. You have six options: undo*,current,next*,exactFromHere,simulAvg*,simulHard*
+If you rather choose "simulator". You get a simulation tool. You have six options: undo\*,current,next\*,exactFromHere,simulAvg\*,simulHard\*
 
 The purpose of the first three options are obvious, just play with it. simulHard and simulAvg are broken, (that's what's meant by "this project is not completed"), so don't use them. "exactFromHere" allows you to caculate the  exact probabilities, but starting from the current state rather than the initial state.
 
