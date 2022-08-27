@@ -1,4 +1,4 @@
-Note: this project is not terminated and barely commented, however the most important features work. I would fix the rest if I had time.
+Note: this project is not terminated and barely commented, contains some sh\*\*ty code, however the most important features work. I would fix the rest if I had time.
 
 On April 1st, the final draw for soccer world cup 2022 (hosted in Qatar) will be held. (Or was held, depending on what day we are today)
 
