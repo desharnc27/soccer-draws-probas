@@ -22,7 +22,7 @@ public class DebugMain {
         cmds.add("n,32");
         cmds.add("exit");
         Flower flower = new PresetScanner(cmds);
-        MegaMain.mainRun(flower);
+        RealMain.mainRun(flower);
     }
 
     public static void main(String[] args) {

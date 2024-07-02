@@ -1,5 +1,6 @@
 central\TimerManager.class
 notusedyet\Test.class
+init\RealMain.class
 central\Statix.class
 algocore\Node.class
 garbage\Qwe.class
@@ -8,7 +9,6 @@ central\StatByTeams.class
 central\Misc.class
 init\ScanMeths.class
 tools\RootException.class
-init\MegaMain$1.class
 scanlol\Flower.class
 exception\ProbaParamEx.class
 algocore\AscendStorer.class
@@ -22,7 +22,6 @@ central\BankAndWaiters.class
 garbage\SpookyNode.class
 tools\GeneralMeths.class
 central\ByteArray.class
-init\MegaMain.class
 tools\RootFinder.class
 central\StateComparator.class
 algocore\AStNode.class

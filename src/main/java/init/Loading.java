@@ -182,7 +182,7 @@ public class Loading {
                 if (!middleStepsValidated) {
                     //Middle steps parsing
                     switch (args[0]) {
-                        case minStr,maxStr:
+                        case minStr, maxStr:
                             if (args.length != nbMonoConts + 1) {
                                 String message = args[0] + " should be followed be as much numbers as there are mono-continents.";
                                 message += "\n but " + (args.length - 1) + " were found while " + nbMonoConts + " were required";

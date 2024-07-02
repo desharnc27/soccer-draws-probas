@@ -21,7 +21,7 @@ public class TimerManager {
 
     private static Timer timer = new Timer();
     private static boolean updateToDisplay = true;
-    private static final ArrayList<Proportion> props = new ArrayList<Proportion>();
+    private static final ArrayList<Proportion> props = new ArrayList<>();
 
     private static void displayUpdate() {
         long num = 0;

@@ -14,10 +14,10 @@ public class BankAndWaiters {
     public static NodeList[] bank = new NodeList[33];
     public static NodeList[] waiters = new NodeList[33];
 
-    static void intitializeLists() {
+    /*static void intitializeLists() {
         for (int i = 0; i <= 32; i++) {
             BankAndWaiters.bank[i] = new NodeList();
             BankAndWaiters.waiters[i] = new NodeList();
         }
-    }
+    }*/
 }

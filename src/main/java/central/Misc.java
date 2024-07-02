@@ -5,7 +5,6 @@
  */
 package central;
 
-import exception.ProbaParamEx;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -13,9 +12,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Scanner;
 
 /**
  *
@@ -140,7 +137,6 @@ public class Misc {
             writer.close();
         } catch (FileNotFoundException e) {
             System.out.println("Warning: file " + filename + " could not be written, the path may not exist.");
-            return;
         }
     }
 

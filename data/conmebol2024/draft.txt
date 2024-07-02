@@ -1,0 +1,38 @@
+// Note: lines that begin with // are not parsed, just comments. Lines of less than 2 characters are also ignored.
+
+Number of pots,4
+Number of groups,4
+Number of mono-continents,2
+//Hybrid continents, not for conmebol
+Number of hosts,3
+
+Mono-continents minima,0,0
+Mono-continents maxima,3,2
+
+//Put the teams in pot order (the nbGroups first teams will be in first pot, then the next nbGroups teams will be in second pot, etc)
+//They must all be followed by their continent id (seperated by comma)
+//To choose which team(s) is(are) host(s), place it(them) first. Hosts are always in pot 1
+
+//Pot1
+Argentina,0
+Mexico,1
+United States,1
+Brasil,0
+
+//Pot2
+Uruguay,0
+Colombia,0
+Ecuador,0
+Peru,0
+
+//Pot3
+Chile,0
+Panama,1
+Venezuela,0
+Paraguay,0
+
+//Pot4
+Canada OR Trinidad,1
+Jamaica,1
+Bolivia,0
+Costa Rica OR Honduras,1

@@ -18,7 +18,7 @@ import tools.CombMeths;
  */
 public class AscendStorer implements Comparable<AscendStorer> {
 
-    private static final ArrayList<AscendStorer> ascendStorerBank = new ArrayList<AscendStorer>();
+    private static final ArrayList<AscendStorer> ascendStorerBank = new ArrayList<>();
 
     private final byte firstLen;
     private final byte[][] firsts;

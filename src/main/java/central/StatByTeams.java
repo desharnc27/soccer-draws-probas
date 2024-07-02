@@ -17,7 +17,7 @@ public class StatByTeams extends StatByConts {
         initializeIndivArray();
     }
 
-    private final void initializeIndivArray() {
+    private void initializeIndivArray() {
         int ngr = Statix.nbGROUPS();
         detailedIndividual = new long[ngr][ngr][ngr][ngr][ngr];
     }

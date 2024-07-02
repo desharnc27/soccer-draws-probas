@@ -31,7 +31,7 @@ public class Simulating {
         int[][] finalConfig = new int[4][Statix.nbGROUPS()];
         for (int i = 0; i < 4; i++) {
             AscendStorer asSt = null;
-            byte[][] asp = null;
+            byte[][] asp;
             byte[] perm = null;
             if (i > 0) {
                 asp = AscendStorer.getAscendStorerPerm(node);
@@ -60,17 +60,17 @@ public class Simulating {
         }
         if (stats != null) {
             if (stats instanceof StatByTeams) {
-                System.out.printf("Remark: using %s does not allow saving calculations\n", MegaMain.SIMUL_HARD);
+                System.out.printf("Remark: using %s does not allow saving calculations\n", RealMain.SIMUL_HARD);
             } else {
                 String question = "How would you name your simulation? (type a single character to avoid saving)";
                 String qrRequest = scanner.questionStr(question, "[\\w]*");
                 if (qrRequest.length() > 1) {
-                    String filename = MegaMain.customFile(Statix.getDataName(), qrRequest);
+                    String filename = RealMain.customFile(Statix.getDataName(), qrRequest);
                     stats.StoreStatsInfile(filename);
                 }
             }
         }
-        MegaMain.probaQuast(scanner, stats);
+        RealMain.probaQuast(scanner, stats);
     }
 
     /**
@@ -91,8 +91,8 @@ public class Simulating {
         }
         while (true) {
             String[] options = new String[]{"undo*", "current", "next*", "exactFromHere",
-                MegaMain.SIMUL_AVG + "*", MegaMain.SIMUL_HARD + "*"};
-            String[] understood = MegaMain.crazyChooseOption(scanner, options);
+                RealMain.SIMUL_AVG + "*", RealMain.SIMUL_HARD + "*"};
+            String[] understood = RealMain.crazyChooseOption(scanner, options);
             StatByConts stats;
             switch (understood[0]) {
                 case "undo":
@@ -138,7 +138,7 @@ public class Simulating {
                     if (teamPrefix != null) {
                         try {
                             int round = teams.size() / Statix.nbGROUPS();
-                            teamIdx = MegaMain.guessTeam(round, teamPrefix);
+                            teamIdx = RealMain.guessTeam(round, teamPrefix);
                             if (teamDrafted[round][teamIdx]) {
                                 System.out.println(Statix.getTeam(round, teamIdx) + " is already drafted.");
                                 break;
@@ -165,7 +165,7 @@ public class Simulating {
                     Simulating.printCurrentDraft(teams, groupOrder);
                     break;
 
-                case MegaMain.SIMUL_AVG:
+                case RealMain.SIMUL_AVG:
                     //stats = StatFida.createAndGet(MegaMain.SIMUL_AVG);
                     stats = new StatByConts();
                     int sampleSize;
@@ -180,7 +180,7 @@ public class Simulating {
                     }
                     expandBySample(stats, sampleSize, actua, teamDrafted, teamBdOrder, teams, groupOrder);
                     return stats;
-                case MegaMain.SIMUL_HARD:
+                case RealMain.SIMUL_HARD:
                     //stats = StatFida.createAndGet(MegaMain.SIMUL_HARD);
                     stats = new StatByTeams();
                     try {
@@ -210,6 +210,11 @@ public class Simulating {
     private static void expandBySample(StatByConts stats, int sampleSize, Node actua, boolean[][] teamDrafted,
             ArrayList<Byte> teamBdOrder, ArrayList<Team> teams, ArrayList<Byte> groupOrder) {
 
+        if (stats == null) {
+            throw new UnsupportedOperationException();
+            //Nothing here cuz it'll never happen, just to remove warning
+        }
+
         for (int i = 0; i < sampleSize; i++) {
             PresetScanner pss = new PresetScanner();//just to avoid printings, useless otherwise
 
@@ -220,6 +225,7 @@ public class Simulating {
             Simulating.printCurrentDraft(teams, groupOrder);
             System.out.println("");
             Misc.print2D(actua.copyPotsState());
+
             if (!(stats instanceof StatByTeams)) {
                 stats.feed(actua.copyPotsState(), 1);
             } else {
@@ -285,7 +291,7 @@ public class Simulating {
         }
 
         AscendStorer asSt = null;
-        byte[][] asp = null;
+        byte[][] asp;
         byte[] perm = null;
         if (round > 0) {
             asp = AscendStorer.getAscendStorerPerm(node);

@@ -24,7 +24,7 @@ import tools.RootFinder;
  *
  * @author desharnc27
  */
-public class MegaMain {
+public class RealMain {
 
     public static final String ROOT_STR = RootFinder.getRootPath();
 
@@ -128,7 +128,7 @@ public class MegaMain {
     }
 
     public static boolean endsWithWild(String input) {
-        if (input.endsWith(MegaMain.SYMB_WILD)) {
+        if (input.endsWith(RealMain.SYMB_WILD)) {
             System.out.println("Wild card symbol should be replaced by a digit.");
             return true;
         }
@@ -189,7 +189,7 @@ public class MegaMain {
         String[] rawOptions = new String[options.length];
         boolean[] hasWildChar = new boolean[options.length];
         for (int i = 0; i < options.length; i++) {
-            if (options[i].endsWith(MegaMain.SYMB_WILD)) {
+            if (options[i].endsWith(RealMain.SYMB_WILD)) {
                 rawOptions[i] = options[i].substring(0, options[i].length() - 1);
                 hasWildChar[i] = true;
             } else {
@@ -203,7 +203,7 @@ public class MegaMain {
             System.out.println("Type one of the following options: " + String.join(",", options));
             String input = scanner.next();
             checkExit(input);
-            boolean endsWithWild = MegaMain.endsWithWild(input);
+            boolean endsWithWild = RealMain.endsWithWild(input);
             if (endsWithWild) {
                 continue;
             }
@@ -378,16 +378,11 @@ public class MegaMain {
 
     private static void loadCustom(Flower scanner) {
         CalculusMain.buildAscendStorage();
-        String fileStr = MegaMain.dataPath(Statix.getDataName());
-        File[] subFile = new File(fileStr).listFiles(new FilenameFilter() {
-            @Override
-            public boolean accept(File dir, String name) {
-                return name.startsWith(MegaMain.CUSTOM_STORAGE);
-            }
-        });
+        String fileStr = RealMain.dataPath(Statix.getDataName());
+        File[] subFile = new File(fileStr).listFiles((File dir, String name) -> name.startsWith(RealMain.CUSTOM_STORAGE));
         String[] options = new String[subFile.length];
         for (int i = 0; i < options.length; i++) {
-            options[i] = subFile[i].getName().substring(MegaMain.CUSTOM_STORAGE.length());
+            options[i] = subFile[i].getName().substring(RealMain.CUSTOM_STORAGE.length());
         }
         int idx = chooseOption(scanner, options);
 
@@ -399,11 +394,11 @@ public class MegaMain {
     private static double manageProbaParamCmd(Flower scanner, StatByConts stats) throws ProbaParamEx {
         System.out.println("What probability would you like to calculate?");
         String input = scanner.next();
-        MegaMain.checkExit(input);
-        if (MegaMain.checkHelp(input, false)) {
+        RealMain.checkExit(input);
+        if (RealMain.checkHelp(input, false)) {
             return -2;
         }
-        if (MegaMain.checkTeamDisplay(input)) {
+        if (RealMain.checkTeamDisplay(input)) {
             return -2;
         }
         String[] args = input.split(",");
@@ -427,7 +422,7 @@ public class MegaMain {
                 reqs[i] = GeneralMeths.idPermArray(nbGroups);
                 continue;
             }
-            String[] enumer = args[i].split(MegaMain.SYMB_OR);
+            String[] enumer = args[i].split(RealMain.SYMB_OR);
             reqs[i] = new int[enumer.length];
             if (reqs[i].length == 1) {
                 nbOfSingletons++;
@@ -438,9 +433,9 @@ public class MegaMain {
                 }
                 int readVal;
                 if (i == 0) {
-                    readVal = MegaMain.guessGroup(enumer[j]);
+                    readVal = RealMain.guessGroup(enumer[j]);
                 } else {
-                    readVal = MegaMain.guessTeam(i - 1, enumer[j]);
+                    readVal = RealMain.guessTeam(i - 1, enumer[j]);
                 }
                 /*if (readVal == -2 ) {
                     throw ProbaParamEx.makeBadArg(enumer[j]);
@@ -465,7 +460,7 @@ public class MegaMain {
     }
 
     private static boolean checkTeamDisplay(String input) {
-        if (input.equals(MegaMain.DISPLAY_TEAMS)) {
+        if (input.equals(RealMain.DISPLAY_TEAMS)) {
             displayTeams();
             return true;
         }
@@ -493,19 +488,23 @@ public class MegaMain {
         int chosenIdx = chooseOption(scanner, options);
         String dataName = new File(options[chosenIdx]).getName();
         Loading.load(dataName, paramFile(dataName));
-        if (!MegaMain.RESTRICTED_VERSION) {
+        if (!RealMain.RESTRICTED_VERSION) {
             DebugData.initialize();
         }
         //
         System.out.println("You want to explore exact probabilities, open existent stat file or use a simulator?");
         options = new String[]{"exact", "load custom", "simulator"};
         chosenIdx = chooseOption(scanner, options);
-        if (chosenIdx == 0) {
-            exactApp(scanner);
-        } else if (chosenIdx == 1) {
-            loadCustom(scanner);
-        } else {
-            simulApp(scanner);
+        switch (chosenIdx) {
+            case 0:
+                exactApp(scanner);
+                break;
+            case 1:
+                loadCustom(scanner);
+                break;
+            default:
+                simulApp(scanner);
+                break;
         }
     }
 

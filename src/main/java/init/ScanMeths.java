@@ -5,12 +5,8 @@
  */
 package init;
 
-import central.Misc;
-import static init.MegaMain.checkExit;
-import java.util.Iterator;
 import java.util.Scanner;
 import scanlol.Flower;
-import scanlol.MyScanna;
 import scanlol.PresetScanner;
 
 /**

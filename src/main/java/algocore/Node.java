@@ -84,9 +84,9 @@ public class Node {
     //Using this function should never be necessary, unless for debugging purposes
     public void resyncLevel() {
         level = 0;
-        for (int i = 0; i < potsState.length; i++) {
-            for (int j = 0; j < potsState[i].length; j++) {
-                if (potsState[i][j] >= 0) {
+        for (byte[] potsState1 : potsState) {
+            for (int j = 0; j < potsState1.length; j++) {
+                if (potsState1[j] >= 0) {
                     level++;
                 }
             }
@@ -426,6 +426,7 @@ public class Node {
      * Generate all doable nodes 8 levels (a full round) after this node
      * (probabilities included)
      *
+     * @param stats
      * @param asSt catalog containing potent children. May and should be left to
      * null for early rounds (0-1-2)
      * @param perm indicates column permutation that allows to look in asSt.
